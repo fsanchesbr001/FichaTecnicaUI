@@ -1,0 +1,43 @@
+<div class="login-container">
+  <mat-card class="login-card">
+    <img ngSrc="/images/LogoTransp.png" alt="Logo da Empresa" class="logo" height="193" width="368">
+    <mat-card-header class="login-header">
+      <mat-card-title>Acesse sua conta</mat-card-title>
+    </mat-card-header>
+    <mat-card-content>
+      <form [formGroup]="loginForm" (ngSubmit)="onSubmit()">
+        <mat-form-field class="full-width" appearance="fill">
+          <mat-label>Email</mat-label>
+          <input matInput type="text" formControlName="email" required  placeholder="seu@email.com">
+          <mat-icon matSuffix>email</mat-icon>
+          @if (email?.hasError('required')) {
+            <mat-error>E-mail é obrigatório</mat-error>
+          }
+          @if (email?.hasError('email')) {
+            <mat-error>Por favor, insira um e-mail válido</mat-error>
+          }
+        </mat-form-field>
+
+        <mat-form-field class="full-width" appearance="fill">
+          <mat-label>Senha</mat-label>
+          <input matInput type="password" formControlName="password" required>
+          <mat-icon matSuffix>key</mat-icon>
+            @if (password?.hasError('required')) {
+                <mat-error>Senha é obrigatória</mat-error>
+            }
+            @if (password?.hasError('minlength')) {
+                <mat-error>Senha deve ter no mínimo 8 caracteres</mat-error>
+            }
+            @if (password?.hasError('pattern')) {
+                <mat-hint>Senha deve conter pelo menos 1 letra maúscula e
+                    1 caractere especial.</mat-hint>
+            }
+
+        </mat-form-field>
+
+        <button mat-raised-button color="primary" type="submit" [disabled]="loginForm.invalid">Acessar</button>
+        <a mat-button class="forgot-password" routerLink="/recuperar-senha">Esqueci a senha</a>
+      </form>
+    </mat-card-content>
+  </mat-card>
+</div>

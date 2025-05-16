@@ -1,1 +1,79 @@
-<p>recuperar-senha works!</p>
+<div class="login-container">
+  <mat-card class="login-card">
+    <img ngSrc="/images/LogoTransp.png" alt="Logo da Empresa" class="logo" height="193" width="368">
+    <mat-card-header class="login-header">
+      <mat-card-title>Recupere sua senha</mat-card-title>
+    </mat-card-header>
+    <mat-card-content>
+      <form [formGroup]="recuperaSenhaForm" (ngSubmit)="onSubmit()">
+        <mat-form-field class="full-width" appearance="fill">
+          <mat-label>Email</mat-label>
+          <input matInput type="text" formControlName="email" required  placeholder="seu@email.com">
+          <mat-icon matSuffix>email</mat-icon>
+          @if (email?.hasError('required')) {
+            <mat-error>E-mail é obrigatório</mat-error>
+          }
+          @if (email?.hasError('email')) {
+            <mat-error>Por favor, insira um e-mail válido</mat-error>
+          }
+        </mat-form-field>
+        <mat-form-field class="full-width" appearance="fill">
+          <mat-icon matSuffix>fingerprint</mat-icon>
+          <mat-label>CPF</mat-label>
+          <input matInput type="tel" formControlName="cpf"
+                 required
+                 mask="000.000.000-00">
+          @if (cpf.length == 0) {
+            <mat-error>CPF é obrigatório</mat-error>
+          }
+        </mat-form-field>
+
+        <mat-form-field class="full-width" appearance="fill">
+          <mat-icon matSuffix>lock_person</mat-icon>
+          <mat-label>Token</mat-label>
+          <input matInput type="tel" formControlName="tokenId"
+                 required
+                 mask="0.0.0.0.0.0.0.0">
+          @if (tokenId.length==0){
+            <mat-error>Token é obrigatório</mat-error>
+          }
+        </mat-form-field>
+
+        <mat-form-field class="full-width" appearance="fill">
+          <mat-label>Nova Senha</mat-label>
+          <input matInput type="password" formControlName="password" required>
+          <mat-icon matSuffix>password</mat-icon>
+          @if (password?.hasError('required')) {
+            <mat-error>Senha é obrigatória</mat-error>
+          }
+          @if (password?.hasError('minlength')) {
+            <mat-error>Senha deve ter no mínimo 8 caracteres</mat-error>
+          }
+          @if (password?.hasError('pattern')) {
+            <mat-hint>Senha deve conter pelo menos 1 letra maúscula e
+              1 caractere especial.</mat-hint>
+          }
+
+        </mat-form-field>
+
+        <mat-form-field class="full-width" appearance="fill">
+          <mat-label>Redigite a senha</mat-label>
+          <input matInput type="password" formControlName="retypePassword" required>
+          <mat-icon matSuffix>password</mat-icon>
+          @if (retypePassword?.hasError('required')) {
+            <mat-error>Senha é obrigatória</mat-error>
+          }
+          @if (retypePassword?.hasError('minlength')) {
+            <mat-error>Senha deve ter no mínimo 8 caracteres</mat-error>
+          }
+          @if (retypePassword?.hasError('pattern')) {
+            <mat-hint>Senha deve conter pelo menos 1 letra maúscula e
+              1 caractere especial.</mat-hint>
+          }
+        </mat-form-field>
+
+        <button mat-raised-button color="primary" type="submit" [disabled]="recuperaSenhaForm.invalid">Atualizar</button>
+      </form>
+    </mat-card-content>
+  </mat-card>
+</div>

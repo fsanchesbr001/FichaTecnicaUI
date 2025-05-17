@@ -1,6 +1,6 @@
 <div class="login-container">
   <mat-card class="login-card">
-    <img ngSrc="/images/LogoTransp.png" alt="Logo da Empresa" class="logo" height="193" width="368">
+    <img ngSrc="/images/LogoTransp.png" alt="Logo da Empresa" class="logo" height="193" width="368" priority>
     <mat-card-header class="login-header">
       <mat-card-title>Recupere sua senha</mat-card-title>
     </mat-card-header>
@@ -22,9 +22,11 @@
           <mat-label>CPF</mat-label>
           <input matInput type="tel" formControlName="cpf"
                  required
-                 mask="000.000.000-00">
-          @if (cpf.length == 0) {
-            <mat-error>CPF é obrigatório</mat-error>
+                 mask="000.000.000-00"
+                 (blur)="recuperaSenhaForm.get('cpf')?.setErrors(!validateCPF() ? { invalidCPF: true } : null)">
+
+          @if (recuperaSenhaForm.get('cpf')?.hasError('invalidCPF')) {
+            <mat-error>CPF é obrigatório e está inválido</mat-error>
           }
         </mat-form-field>
 
@@ -40,7 +42,7 @@
         </mat-form-field>
 
         <mat-form-field class="full-width" appearance="fill">
-          <mat-label>Nova Senha</mat-label>
+          <mat-label>Nova senha</mat-label>
           <input matInput type="password" formControlName="password" required>
           <mat-icon matSuffix>password</mat-icon>
           @if (password?.hasError('required')) {
@@ -58,13 +60,17 @@
 
         <mat-form-field class="full-width" appearance="fill">
           <mat-label>Redigite a senha</mat-label>
-          <input matInput type="password" formControlName="retypePassword" required>
+          <input matInput type="password" formControlName="retypePassword" required
+                 (blur)="recuperaSenhaForm.get('retypePassword')?.setErrors(!validatePasswords() ? { passwordsMismatch: true } : null)">
           <mat-icon matSuffix>password</mat-icon>
           @if (retypePassword?.hasError('required')) {
             <mat-error>Senha é obrigatória</mat-error>
           }
           @if (retypePassword?.hasError('minlength')) {
             <mat-error>Senha deve ter no mínimo 8 caracteres</mat-error>
+          }
+          @if (retypePassword?.hasError('passwordsMismatch')) {
+            <mat-error>As senhas não coincidem</mat-error>
           }
           @if (retypePassword?.hasError('pattern')) {
             <mat-hint>Senha deve conter pelo menos 1 letra maúscula e

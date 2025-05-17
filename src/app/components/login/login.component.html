@@ -1,6 +1,6 @@
 <div class="login-container">
   <mat-card class="login-card">
-    <img ngSrc="/images/LogoTransp.png" alt="Logo da Empresa" class="logo" height="193" width="368">
+    <img ngSrc="/images/LogoTransp.png" alt="Logo da Empresa" class="logo" height="193" width="368" priority>
     <mat-card-header class="login-header">
       <mat-card-title>Acesse sua conta</mat-card-title>
     </mat-card-header>
@@ -36,7 +36,7 @@
         </mat-form-field>
 
         <button mat-raised-button color="primary" type="submit" [disabled]="loginForm.invalid">Acessar</button>
-        <a mat-button class="forgot-password" routerLink="/recuperar-senha">Esqueci a senha</a>
+        <a mat-button class="forgot-password" routerLink="/solicitar-token">Esqueci a senha</a>
       </form>
     </mat-card-content>
   </mat-card>

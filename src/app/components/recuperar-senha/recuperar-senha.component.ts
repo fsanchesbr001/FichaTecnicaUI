@@ -8,6 +8,7 @@ import {MatIcon} from '@angular/material/icon';
 import {MatSnackBar} from '@angular/material/snack-bar';
 import { NgxMaskDirective} from 'ngx-mask';
 import { FormsModule } from '@angular/forms';
+import { ActivatedRoute } from '@angular/router';
 
 @Component({
   selector: 'app-recuperar-senha',
@@ -69,7 +70,44 @@ export class RecuperarSenhaComponent {
     ])
   });
 
-  constructor(private snackBar: MatSnackBar) {}
+  constructor(private snackBar: MatSnackBar,
+              private route: ActivatedRoute) {}
+
+
+  ngOnInit() {
+    this.route.queryParams.subscribe(params => {
+      if (params['cpf']) {
+        this.recuperaSenhaForm.get('cpf')?.setValue(params['cpf']);
+        this.recuperaSenhaForm.get('cpf')?.disable();
+      }
+      if (params['email']) {
+        this.recuperaSenhaForm.get('email')?.setValue(params['email']);
+        this.recuperaSenhaForm.get('email')?.disable();
+      }
+    });
+  }
+
+  validatePasswords(): boolean {
+    const password = this.recuperaSenhaForm.get('password')?.value;
+    const retypePassword = this.recuperaSenhaForm.get('retypePassword')?.value;
+    return password === retypePassword;
+  }
+
+  validateCPF(): boolean {
+    const cpf = this.recuperaSenhaForm.get('cpf')?.value;
+    // Implementação simples de validação de CPF
+    if (!cpf || cpf.length !== 11 || /^(\d)\1+$/.test(cpf)) return false;
+    let sum = 0, remainder;
+    for (let i = 1; i <= 9; i++) sum += parseInt(cpf[i - 1]) * (11 - i);
+    remainder = (sum * 10) % 11;
+    if (remainder === 10 || remainder === 11) remainder = 0;
+    if (remainder !== parseInt(cpf[9])) return false;
+    sum = 0;
+    for (let i = 1; i <= 10; i++) sum += parseInt(cpf[i - 1]) * (12 - i);
+    remainder = (sum * 10) % 11;
+    if (remainder === 10 || remainder === 11) remainder = 0;
+    return remainder === parseInt(cpf[10]);
+  }
 
   get email() {
     return this.recuperaSenhaForm.get('email');

@@ -10,5 +10,10 @@ export const routes: Routes = [
     path: 'recuperar-senha',
     loadComponent: () => import('./components/recuperar-senha/recuperar-senha.component')
       .then(m => m.RecuperarSenhaComponent)
+  },
+  {
+    path: 'solicitar-token',
+    loadComponent: () => import('./components/solicitar-token/solicitar-token.component')
+      .then(m => m.SolicitarTokenComponent)
   }
 ];

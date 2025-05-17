@@ -60,4 +60,6 @@ For more information on using the Angular CLI, including detailed command refere
 
 
 ## Versioning History
-- 1.0.0 - Versão Inicial - Página de Login.
+- 1.0.0 - Versão Inicial - Página de ‘Login’.
+- 1.0.1 - Página de Recuperar Senha.
+- 1.0.2 - Página de Solicitar ‘Token’ e validações.

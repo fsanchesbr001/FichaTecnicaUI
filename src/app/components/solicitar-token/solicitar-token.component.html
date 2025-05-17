@@ -1,0 +1,37 @@
+<div class="login-container">
+  <mat-card class="login-card">
+    <img ngSrc="/images/LogoTransp.png" alt="Logo da Empresa" class="logo" height="193" width="368" priority>
+    <mat-card-header class="login-header">
+      <mat-card-title>Solicitar Token de Segurança</mat-card-title>
+    </mat-card-header>
+    <mat-card-content>
+      <form [formGroup]="solicitarTokenForm" (ngSubmit)="onSubmit()">
+        <mat-form-field class="full-width" appearance="fill">
+          <mat-label>Email</mat-label>
+          <input matInput type="text" formControlName="email" required  placeholder="seu@email.com">
+          <mat-icon matSuffix>email</mat-icon>
+          @if (solicitarTokenForm.get('email')?.hasError('required')) {
+            <mat-error>E-mail é obrigatório</mat-error>
+          }
+          @if (solicitarTokenForm.get('email')?.hasError('email')) {
+            <mat-error>Por favor, insira um e-mail válido</mat-error>
+          }
+        </mat-form-field>
+        <mat-form-field class="full-width" appearance="fill">
+          <mat-icon matSuffix>fingerprint</mat-icon>
+          <mat-label>CPF</mat-label>
+          <input matInput type="tel" formControlName="cpf"
+                 required
+                 mask="000.000.000-00"
+                 (blur)="solicitarTokenForm.get('cpf')?.setErrors(!validateCPF() ? { invalidCPF: true } : null)">
+
+          @if (solicitarTokenForm.get('cpf')?.hasError('invalidCPF')) {
+            <mat-error>CPF é obrigatório e está inválido</mat-error>
+          }
+        </mat-form-field>
+        <button mat-raised-button class="botoes" color="primary" type="submit" [disabled]="solicitarTokenForm.invalid">Solicitar token</button>
+        <button mat-raised-button class="botoes" color="primary" type="button" [disabled]="!isTokenButtonEnabled" (click)="redirectToRecuperarSenha()">Tenho token</button>
+      </form>
+    </mat-card-content>
+  </mat-card>
+</div>

@@ -22,8 +22,7 @@
           <mat-label>CPF</mat-label>
           <input matInput type="tel" formControlName="cpf"
                  required
-                 mask="000.000.000-00"
-                 (blur)="recuperaSenhaForm.get('cpf')?.setErrors(!validateCPF() ? { invalidCPF: true } : null)">
+                 mask="000.000.000-00">
 
           @if (recuperaSenhaForm.get('cpf')?.hasError('invalidCPF')) {
             <mat-error>CPF é obrigatório e está inválido</mat-error>

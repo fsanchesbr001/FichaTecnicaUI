@@ -17,18 +17,6 @@
             <mat-error>Por favor, insira um e-mail válido</mat-error>
           }
         </mat-form-field>
-        <mat-form-field class="full-width" appearance="fill">
-          <mat-icon matSuffix>fingerprint</mat-icon>
-          <mat-label>CPF</mat-label>
-          <input matInput type="tel" formControlName="cpf"
-                 required
-                 mask="000.000.000-00"
-                 (blur)="solicitarTokenForm.get('cpf')?.setErrors(!validateCPF() ? { invalidCPF: true } : null)">
-
-          @if (solicitarTokenForm.get('cpf')?.hasError('invalidCPF')) {
-            <mat-error>CPF é obrigatório e está inválido</mat-error>
-          }
-        </mat-form-field>
         <button mat-raised-button class="botoes" color="primary" type="submit" [disabled]="solicitarTokenForm.invalid">Solicitar token</button>
         <button mat-raised-button class="botoes" color="primary" type="button" [disabled]="!isTokenButtonEnabled" (click)="redirectToRecuperarSenha()">Tenho token</button>
       </form>

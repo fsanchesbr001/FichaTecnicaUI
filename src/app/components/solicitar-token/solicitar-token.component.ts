@@ -55,7 +55,6 @@ export class SolicitarTokenComponent {
   }
 
   redirectToRecuperarSenha() {
-    const  email = this.solicitarTokenForm.get('email')?.value;
-    this.router.navigate(['/recuperar-senha'], { queryParams: { email } });
+    this.router.navigate(['/recuperar-senha']);
   }
 }

@@ -74,16 +74,6 @@ export class RecuperarSenhaComponent {
   constructor(private snackBar: MatSnackBar,
               private route: ActivatedRoute) {}
 
-
-  ngOnInit() {
-    this.route.queryParams.subscribe(params => {
-      if (params['email']) {
-        this.recuperaSenhaForm.get('email')?.setValue(params['email']);
-        this.recuperaSenhaForm.get('email')?.disable();
-      }
-    });
-  }
-
   validatePasswords(): boolean {
     const password = this.recuperaSenhaForm.get('password')?.value;
     const retypePassword = this.recuperaSenhaForm.get('retypePassword')?.value;

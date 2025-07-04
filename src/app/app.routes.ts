@@ -15,5 +15,10 @@ export const routes: Routes = [
     path: 'solicitar-token',
     loadComponent: () => import('./components/solicitar-token/solicitar-token.component')
       .then(m => m.SolicitarTokenComponent)
+  },
+  {
+    path: 'principal',
+    loadComponent: () => import('./components/tela-principal/tela-principal.component')
+      .then(m => m.TelaPrincipalComponent)
   }
 ];

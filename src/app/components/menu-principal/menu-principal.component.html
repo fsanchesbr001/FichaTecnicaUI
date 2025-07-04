@@ -1,0 +1,20 @@
+<!-- src/app/components/menu-principal/menu-principal.component.html -->
+<div class="menu-container">
+  <mat-card class="menu-card">
+    <img ngSrc="/images/LogoTransp.png" alt="Logo da Empresa" class="logo" height="193" width="368" priority>
+    <mat-card-content class="menu-content">
+      <div class="menu-item" [ngClass]="{ selected: selectedMenu === 'usuarios' }" (click)="selectMenu('usuarios')">
+        Usuários
+      </div>
+      <div class="submenu-item" [ngClass]="{ selected: selectedSubmenu === 'gerenciar' }" (click)="selectSubmenu('gerenciar')">
+        &nbsp;&nbsp;&nbsp;Gerenciar
+      </div>
+      <div class="menu-item" [ngClass]="{ selected: selectedMenu === 'sistema' }" (click)="selectMenu('sistema')">
+        Sistema
+      </div>
+      <div class="submenu-item" [ngClass]="{ selected: selectedSubmenu === 'sobre' }" (click)="selectSubmenu('sobre')">
+        &nbsp;&nbsp;&nbsp;Sobre
+      </div>
+    </mat-card-content>
+  </mat-card>
+</div>

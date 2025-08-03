@@ -1,54 +1,42 @@
-/* src/app/components/menu-principal/menu-principal.component.css */
 .menu-container {
-  color: black;
-  background-color: white;
-  font-family: Arial, sans-serif;
-  font-size: 12px;
-  font-weight: bold;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  height: 100vh;
-  box-sizing: border-box; /* Inclui bordas e preenchimento no tamanho total */
-  overflow: hidden; /* Remove barra de rolagem externa */
+  width: 320px;
+  max-height: 400px; /* ajuste conforme necessário */
+
+  overflow-y: auto;
 }
 
 .menu-card {
-  width: 100%;
-  max-width: 400px;
-  max-height: 400px;
-  display: flex;
-  flex-direction: column;
-  padding: 24px;
-  border: 1px solid #ccc;
-  border-radius: 8px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  width: 90%;
+  margin-left: 10px;
+  margin-bottom: 5px;
+  margin-top: 5px;
 }
 
 .menu-content {
-  overflow-y: auto; /* Adiciona barra de rolagem vertical no conteúdo */
-  flex: 1; /* Garante que o conteúdo ocupe o espaço disponível */
-  padding: 16px;
+  padding-left: 5px;
+}
+
+.menu-item {
+  font-weight: bold;
+  cursor: pointer;
+  padding: 8px 0;
+}
+
+.submenu-item {
+  padding: 8px 0 8px 24px;
+  cursor: pointer;
+}
+
+.submenu-item.selected {
+  background-color: #3f51b5;
+  color: #fff;
+  border-radius: 4px;
 }
 
 .logo {
   display: block;
+  width: 50%;
   margin: 0 auto;
-  max-width: 50%;
-  height: auto;
 }
 
-.menu-item, .submenu-item {
-  cursor: pointer;
-  padding: 8px;
-}
 
-.submenu-item {
-  margin-left: 16px;
-}
-
-.selected {
-  color: white;
-  background-color: #3f51b5; /* Cor do Angular Material */
-  border-radius: 4px;
-}

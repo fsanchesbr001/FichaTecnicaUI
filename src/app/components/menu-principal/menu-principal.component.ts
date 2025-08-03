@@ -2,6 +2,17 @@ import { Component } from '@angular/core';
 import {CommonModule, NgOptimizedImage} from '@angular/common';
 import {MatCard, MatCardContent} from '@angular/material/card';
 
+interface Submenu {
+  label: string;
+  selected?: boolean;
+}
+
+interface Menu {
+  label: string;
+  isOpen: boolean;
+  submenus: Submenu[];
+}
+
 @Component({
   selector: 'app-menu-principal',
   imports: [CommonModule, MatCard, MatCardContent, NgOptimizedImage],
@@ -9,15 +20,30 @@ import {MatCard, MatCardContent} from '@angular/material/card';
   styleUrl: './menu-principal.component.css'
 })
 export class MenuPrincipalComponent {
-  selectedMenu: string | null = null;
+  menus: Menu[] = [
+    {
+      label: 'Usuários',
+      isOpen: false,
+      submenus: [
+        { label: 'Gerenciar' }
+      ]
+    },
+    {
+      label: 'Sistema',
+      isOpen: false,
+      submenus: [
+        { label: 'Sobre' }
+      ]
+    }
+  ];
+
   selectedSubmenu: string | null = null;
 
-  selectMenu(menu: string) {
-    this.selectedMenu = menu;
-    this.selectedSubmenu = null; // Limpa o submenu ao selecionar um menu
+  toggleMenu(menu: Menu) {
+    menu.isOpen = !menu.isOpen;
   }
 
-  selectSubmenu(submenu: string) {
-    this.selectedSubmenu = submenu;
+  selectSubmenu(submenu: Submenu) {
+    this.selectedSubmenu = submenu.label;
   }
 }

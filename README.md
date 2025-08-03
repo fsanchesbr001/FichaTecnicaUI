@@ -66,3 +66,4 @@ For more information on using the Angular CLI, including detailed command refere
 - 1.0.3 - Usando apenas endereço eletrónico na solicitação de senha.
 - 1.0.4 - Não passando o endereço eletrónico para a página de troca de senha.
 - 1.0.5 - Adicionado menu principal responsivo.
+- 1.0.6 - Adicionado exibir e esconder submenus.

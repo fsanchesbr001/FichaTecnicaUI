@@ -1,13 +1,23 @@
 /* src/app/components/tela-principal/tela-principal.component.css */
 .tela-principal-container {
   height: 100vh;
+  display: flex;
 }
 
 .menu-section {
-  width: 50%;
+  width: 30%;
 }
 
 .principal-section {
-  width: 75%;
+  width: 70%;
   padding: 16px;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.principal-section > * {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
 }

@@ -10,15 +10,20 @@
             <mat-label>Nome</mat-label>
             <input matInput placeholder="Nome do Usuário" formControlName="nome" required>
             <mat-icon matSuffix>person</mat-icon>
-            <mat-error *ngIf="form.get('nome')?.hasError('required')">Nome é obrigatório</mat-error>
+            @if(form.get('nome')?.hasError('required')) {
+              <mat-error>Nome é obrigatório</mat-error>
+            }
           </mat-form-field>
 
           <mat-form-field class="half-width" appearance="fill">
             <mat-label>E-mail</mat-label>
             <input matInput placeholder="E-mail do Usuário" formControlName="email" required>
             <mat-icon matSuffix>email</mat-icon>
-            <mat-error *ngIf="form.get('email')?.hasError('required')">E-mail é obrigatório</mat-error>
-            <mat-error *ngIf="form.get('email')?.hasError('email')">E-mail inválido</mat-error>
+            @if (form.get('email')?.hasError('required')) {
+              <mat-error>E-mail é obrigatório</mat-error>
+            } @else if (form.get('email')?.hasError('email')) {
+              <mat-error>E-mail inválido</mat-error>
+            }
           </mat-form-field>
         </div>
         <div class="linha-campos">
@@ -26,16 +31,26 @@
             <mat-label>CPF</mat-label>
             <input matInput type="tel" formControlName="cpf" required mask="000.000.000-00">
             <mat-icon matSuffix>fingerprint</mat-icon>
-            <mat-error *ngIf="form.get('cpf')?.hasError('invalidCPF')">CPF obrigatório ou inválido</mat-error>
+            @if(form.get('cpf')?.hasError('required')) {
+              <mat-error>CPF é obrigatório</mat-error>
+            }
+            @else if(form.get('cpf')?.hasError('invalidCPF')) {
+              <mat-error>CPF é inválido</mat-error>
+            }
           </mat-form-field>
 
           <mat-form-field class="full-width" appearance="fill">
             <mat-label>Role</mat-label>
             <mat-select formControlName="role" required>
-              <mat-option *ngFor="let r of roles" [value]="r">{{ r }}</mat-option>
+              @for (r of roles; track r) {
+                <mat-option [value]="r">{{ r }}</mat-option>
+              }
             </mat-select>
             <mat-icon matSuffix>supervisor_account</mat-icon>
-            <mat-error *ngIf="form.get('role')?.hasError('required')">Role é obrigatório</mat-error>
+            @if (form.get('role')?.hasError('required')) {
+              <mat-error>Role é obrigatório</mat-error>
+            }
+
           </mat-form-field>
         </div>
         <div class="linha-campos">

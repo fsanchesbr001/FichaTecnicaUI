@@ -1,0 +1,91 @@
+<div class="usuario-container">
+  <mat-card class="usuario-card">
+    <mat-card-header class="usuario-header">
+      <mat-card-title>Cadastro de Usuário</mat-card-title>
+    </mat-card-header>
+    <mat-card-content>
+      <form [formGroup]="form" autocomplete="off">
+        <div class="linha-campos">
+          <mat-form-field class="half-width" appearance="fill">
+            <mat-label>Nome</mat-label>
+            <input matInput placeholder="Nome do Usuário" formControlName="nome" required>
+            <mat-icon matSuffix>person</mat-icon>
+            <mat-error *ngIf="form.get('nome')?.hasError('required')">Nome é obrigatório</mat-error>
+          </mat-form-field>
+
+          <mat-form-field class="half-width" appearance="fill">
+            <mat-label>E-mail</mat-label>
+            <input matInput placeholder="E-mail do Usuário" formControlName="email" required>
+            <mat-icon matSuffix>email</mat-icon>
+            <mat-error *ngIf="form.get('email')?.hasError('required')">E-mail é obrigatório</mat-error>
+            <mat-error *ngIf="form.get('email')?.hasError('email')">E-mail inválido</mat-error>
+          </mat-form-field>
+        </div>
+        <div class="linha-campos">
+          <mat-form-field class="full-width" appearance="fill">
+            <mat-label>CPF</mat-label>
+            <input matInput type="tel" formControlName="cpf" required mask="000.000.000-00">
+            <mat-icon matSuffix>fingerprint</mat-icon>
+            <mat-error *ngIf="form.get('cpf')?.hasError('invalidCPF')">CPF obrigatório ou inválido</mat-error>
+          </mat-form-field>
+
+          <mat-form-field class="full-width" appearance="fill">
+            <mat-label>Role</mat-label>
+            <mat-select formControlName="role" required>
+              <mat-option *ngFor="let r of roles" [value]="r">{{ r }}</mat-option>
+            </mat-select>
+            <mat-icon matSuffix>supervisor_account</mat-icon>
+            <mat-error *ngIf="form.get('role')?.hasError('required')">Role é obrigatório</mat-error>
+          </mat-form-field>
+        </div>
+        <div class="linha-campos">
+          <mat-form-field class="full-width" appearance="fill">
+            <mat-label>Data de expiração da senha</mat-label>
+            <input matInput [matDatepicker]="picker" formControlName="dataExpiracao" [disabled]="true">
+            <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
+            <mat-datepicker #picker></mat-datepicker>
+          </mat-form-field>
+
+          <mat-form-field class="full-width" appearance="fill">
+            <mat-label>Tentativas restantes</mat-label>
+            <input matInput type="number" formControlName="tentativas" min="0" max="5" [disabled]="true">
+            <mat-icon matSuffix>lock_reset</mat-icon>
+          </mat-form-field>
+        </div>
+        <div class="toggles">
+          <div class="toggle-row">
+            <div class="toggle-item">
+              <mat-label>Primeiro Acesso</mat-label>
+              <mat-slide-toggle formControlName="primeiroAcesso"></mat-slide-toggle>
+            </div>
+            <div class="toggle-item">
+              <mat-label>Bloqueio Administrativo</mat-label>
+              <mat-slide-toggle formControlName="bloqueioAdm"></mat-slide-toggle>
+            </div>
+          </div>
+          <div class="toggle-row">
+            <div class="toggle-item">
+              <mat-label>Bloqueio por Tentativas</mat-label>
+              <mat-slide-toggle formControlName="bloqueioTentativas"></mat-slide-toggle>
+            </div>
+            <div class="toggle-item">
+              <mat-label>Bloqueio por Expiração de Senha</mat-label>
+              <mat-slide-toggle formControlName="bloqueioExpiracao"></mat-slide-toggle>
+            </div>
+          </div>
+        </div>
+        <div class="botoes">
+          <button mat-raised-button color="primary" (click)="salvar()" [disabled]="form.invalid">
+            <mat-icon>save</mat-icon> Salvar
+          </button>
+          <button mat-raised-button color="warn" (click)="cancelar()">
+            <mat-icon>cancel</mat-icon> Cancelar
+          </button>
+          <button mat-raised-button color="accent" (click)="imprimir()">
+            <mat-icon>print</mat-icon> Imprimir
+          </button>
+        </div>
+      </form>
+    </mat-card-content>
+  </mat-card>
+</div>

@@ -1,0 +1,58 @@
+.lista-usuarios-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+
+.lista-usuarios-table-container {
+  width: 100%;
+  overflow-x: auto;
+}
+
+table {
+  width: 100%;
+  min-width: 600px;
+}
+
+.col-nome {
+  width: 30%;
+  min-width: 120px;
+}
+
+.col-email {
+  width: 30%;
+  min-width: 120px;
+}
+
+.col-role {
+  width: 10%;
+  min-width: 60px;
+}
+
+.col-acoes {
+  width: 30%;
+  min-width: 120px;
+}
+
+.col-nome, .col-email, .col-role, .col-acoes {
+  width: auto;
+  min-width: 80px;
+}
+.lista-usuarios-header {
+  flex-direction: column;
+  gap: 6px;
+}
+
+.lista-usuarios-titulo {
+  text-align: center;
+  margin-bottom: 16px;
+}
+
+@media (max-width: 600px) {
+  table {
+    min-width: 0;
+    font-size: 13px;
+  }
+}

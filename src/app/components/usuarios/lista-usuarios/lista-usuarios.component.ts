@@ -5,6 +5,7 @@ import {MatButtonModule} from '@angular/material/button';
 import {MatTooltipModule} from '@angular/material/tooltip';
 import { MatPaginator, MatPaginatorModule } from '@angular/material/paginator';
 import { MatTableDataSource } from '@angular/material/table';
+import { Router } from '@angular/router';
 
 export interface Usuario {
   nome: string;
@@ -37,5 +38,15 @@ export class ListaUsuariosComponent implements AfterViewInit{
 
   ngAfterViewInit() {
     this.dataSource.paginator = this.paginator;
+  }
+  constructor(private router: Router) {}
+
+  onEditar() {
+    this.router.navigate(['/principal/formulario-usuarios']);
+
+  }
+
+  onNovo() {
+    this.router.navigate(['/principal/formulario-usuarios']);
   }
 }

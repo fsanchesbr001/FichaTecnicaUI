@@ -1,14 +1,20 @@
 /* src/app/components/tela-principal/tela-principal.component.css */
-.tela-principal-container {
+/*.tela-principal-container {
   height: 100vh;
   display: flex;
-}
+}*/
 
 .menu-section {
+  display: flex;
+  flex-direction: column;
+  justify-content: center; /* centraliza verticalmente */
+  align-items: center;     /* centraliza horizontalmente */
   width: 30%;
+  height: 100vh;
+
 }
 
-.principal-section {
+/*.principal-section {
   width: 70%;
   padding: 16px;
   height: 100vh;
@@ -20,4 +26,12 @@
   flex: 1 1 auto;
   display: flex;
   flex-direction: column;
+}*/
+
+.tela-principal-container,
+.principal-section {
+  height: 100vh;
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
 }

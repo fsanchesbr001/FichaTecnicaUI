@@ -6,7 +6,7 @@ import {MatIcon} from "@angular/material/icon";
 import {MatSnackBar} from "@angular/material/snack-bar";
 import {NgOptimizedImage} from "@angular/common";
 import {MatButton} from "@angular/material/button";
-import {RouterLink} from "@angular/router";
+import {RouterLink, Router} from "@angular/router";
 @Component({
   selector: 'app-login',
   imports: [
@@ -47,7 +47,7 @@ export class LoginComponent {
   });
 
 
-  constructor(private snackBar: MatSnackBar) {}
+  constructor(private snackBar: MatSnackBar, private router: Router) {}
 
 
 
@@ -64,6 +64,7 @@ export class LoginComponent {
       this.snackBar.open('Login realizado com sucesso!', 'Fechar', {
         duration: 3000
       });
+      this.router.navigate(['/principal/lista-usuarios']);
       // Aqui você implementaria a lógica real de login
     } else {
       this.snackBar.open('Por favor, corrija os erros no formulário.', 'Fechar', {

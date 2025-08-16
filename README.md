@@ -70,3 +70,4 @@ For more information on using the Angular CLI, including detailed command refere
 - 1.0.7 - Adicionado formulário de usuário.
 - 1.0.8 - Adicionado @for e @if.
 - 1.0.9 - Adicionado lista de Usuários.
+- 1.0.10 - Ligando links e abrir formularios na seção principal.

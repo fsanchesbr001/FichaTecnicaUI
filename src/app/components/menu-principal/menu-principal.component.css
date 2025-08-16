@@ -1,7 +1,6 @@
 .menu-container {
   width: 320px;
   max-height: 400px; /* ajuste conforme necessário */
-
   overflow-y: auto;
 }
 
@@ -35,8 +34,9 @@
 
 .logo {
   display: block;
-  width: 50%;
-  margin: 0 auto;
+  width: 120px;
+  height: auto;
+  margin: 0 auto 16px;
 }
 
 

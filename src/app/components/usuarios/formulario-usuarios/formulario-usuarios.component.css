@@ -71,6 +71,12 @@ mat-card-content {
   margin-top: 16px;
 }
 
+:host {
+  display: block;
+  margin-top: 5px;
+  margin-right: 10px;
+}
+
 @media (max-width: 600px) {
   .usuario-card {
     max-width: 100%;

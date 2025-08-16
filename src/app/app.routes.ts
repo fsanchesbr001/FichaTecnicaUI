@@ -1,4 +1,7 @@
 import { Routes } from '@angular/router';
+import {TelaPrincipalComponent} from './components/tela-principal/tela-principal.component';
+import {ListaUsuariosComponent} from './components/usuarios/lista-usuarios/lista-usuarios.component';
+import {FormularioUsuariosComponent} from './components/usuarios/formulario-usuarios/formulario-usuarios.component';
 
 export const routes: Routes = [
   {
@@ -18,7 +21,10 @@ export const routes: Routes = [
   },
   {
     path: 'principal',
-    loadComponent: () => import('./components/tela-principal/tela-principal.component')
-      .then(m => m.TelaPrincipalComponent)
+    component: TelaPrincipalComponent,
+    children: [
+      { path: 'lista-usuarios', component: ListaUsuariosComponent },
+      { path: 'formulario-usuarios', component: FormularioUsuariosComponent},
+    ]
   }
 ];

@@ -90,13 +90,13 @@
           </div>
         </div>
         <div class="botoes">
-          <button mat-raised-button color="primary" (click)="salvar()" [disabled]="form.invalid">
+          <button mat-raised-button color="primary" (click)="onSalvar()" [disabled]="form.invalid">
             <mat-icon>save</mat-icon> Salvar
           </button>
-          <button mat-raised-button color="warn" (click)="cancelar()">
+          <button mat-raised-button color="warn" (click)="onCancelar()">
             <mat-icon>cancel</mat-icon> Cancelar
           </button>
-          <button mat-raised-button color="accent" (click)="imprimir()">
+          <button mat-raised-button color="accent" (click)="onImprimir()">
             <mat-icon>print</mat-icon> Imprimir
           </button>
         </div>

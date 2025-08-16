@@ -1,10 +1,12 @@
 import { Component } from '@angular/core';
 import {CommonModule, NgOptimizedImage} from '@angular/common';
 import {MatCard, MatCardContent} from '@angular/material/card';
+import {Router} from '@angular/router';
 
 interface Submenu {
   label: string;
   selected?: boolean;
+  routePath?: string;
 }
 
 interface Menu {
@@ -20,12 +22,15 @@ interface Menu {
   styleUrl: './menu-principal.component.css'
 })
 export class MenuPrincipalComponent {
+  constructor(private router: Router) {}
+  // Define the structure of the menu
   menus: Menu[] = [
     {
       label: 'Usuários',
       isOpen: false,
       submenus: [
-        { label: 'Gerenciar' }
+        { label: 'Gerenciar',
+          routePath: '/principal/lista-usuarios' },
       ]
     },
     {
@@ -45,5 +50,6 @@ export class MenuPrincipalComponent {
 
   selectSubmenu(submenu: Submenu) {
     this.selectedSubmenu = submenu.label;
+    this.router.navigate([submenu.routePath]);
   }
 }

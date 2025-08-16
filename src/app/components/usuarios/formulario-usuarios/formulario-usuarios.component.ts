@@ -1,4 +1,4 @@
-import { Component, Input, OnInit } from '@angular/core';
+import { Component, Input } from '@angular/core';
 import {FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators} from '@angular/forms';
 import {MatCard, MatCardContent, MatCardHeader, MatCardTitle} from '@angular/material/card';
 import {MatError, MatFormField,  MatInput, MatLabel, MatSuffix} from '@angular/material/input';
@@ -15,6 +15,7 @@ import { LOCALE_ID } from '@angular/core';
 import { registerLocaleData } from '@angular/common';
 import localePt from '@angular/common/locales/pt';
 import {validateCPF} from '../../../validators/cpf.validator';
+import {Router} from '@angular/router';
 
 registerLocaleData(localePt);
 
@@ -69,39 +70,43 @@ export const MY_DATE_FORMATS = {
   styleUrls: ['./formulario-usuarios.component.css']
 })
 
-export class FormularioUsuariosComponent implements OnInit {
+export class FormularioUsuariosComponent  {
   @Input() usuario: any;
   form!: FormGroup;
   roles = ['ADMIN', 'USER'];
 
-  constructor(private fb: FormBuilder) {}
-
-  ngOnInit(): void {
+  constructor(private fb: FormBuilder, private router: Router) {
+    // Inicializa o formulário com valores padrão se necessário
     this.form = this.fb.group({
-      nome: [this.usuario?.nome || '', Validators.required],
-      email: [this.usuario?.email || '', [Validators.required, Validators.email]],
-      cpf: [this.usuario?.cpf || '', [validateCPF,Validators.required, Validators.minLength(11),Validators.maxLength(11),Validators.pattern(/^\d{11}$/)]],
-      role: [this.usuario?.role || '', Validators.required],
-      dataExpiracao: [{ value: this.usuario?.dataExpiracao || new Date(), disabled: true }],
-      tentativas: [{ value: this.usuario?.tentativas ?? 5, disabled: true }, [Validators.min(0), Validators.max(5)]],
-      primeiroAcesso: [this.usuario?.primeiroAcesso || false],
-      bloqueioAdm: [this.usuario?.bloqueioAdm || false],
-      bloqueioTentativas: [this.usuario?.bloqueioTentativas || false],
-      bloqueioExpiracao: [this.usuario?.bloqueioExpiracao || false]
+      nome: ['', Validators.required],
+      email: ['', [Validators.required, Validators.email]],
+      cpf: ['', [validateCPF, Validators.required, Validators.minLength(11), Validators.maxLength(11), Validators.pattern(/^\d{11}$/)]],
+      role: ['', Validators.required],
+      dataExpiracao: [{ value: new Date(), disabled: true }],
+      tentativas: [{ value: 5, disabled: true }, [Validators.min(0), Validators.max(5)]],
+      primeiroAcesso: [false],
+      bloqueioAdm: [false],
+      bloqueioTentativas: [false],
+      bloqueioExpiracao: [false]
     });
   }
 
-  salvar() {
+  onSalvar() {
     if (this.form.valid) {
-      // lógica de salvar
+      // Aqui você pode enviar os dados do formulário para o backend ou realizar outras ações
+      console.log('Formulário enviado com sucesso!', this.form.value);
+    } else {
+      console.log('Formulário inválido');
     }
   }
 
-  cancelar() {
-    // lógica de cancelar
+  onCancelar() {
+    this.router.navigate(['/principal/lista-usuarios']);
+    console.log('Ação cancelada');
   }
 
-  imprimir() {
-    // lógica de imprimir
+  onImprimir() {
+    // Aqui você pode implementar a lógica para imprimir o formulário ou os dados do usuário
+    console.log('Imprimindo formulário...');
   }
 }

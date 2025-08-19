@@ -26,6 +26,14 @@ export class MenuPrincipalComponent {
   // Define the structure of the menu
   menus: Menu[] = [
     {
+      label: 'Medidas',
+      isOpen: false,
+      submenus: [
+        { label: 'Gerenciar',
+          routePath: '/principal/lista-medidas' }
+      ]
+    },
+    {
       label: 'Usuários',
       isOpen: false,
       submenus: [

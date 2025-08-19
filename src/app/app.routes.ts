@@ -2,6 +2,8 @@ import { Routes } from '@angular/router';
 import {TelaPrincipalComponent} from './components/tela-principal/tela-principal.component';
 import {ListaUsuariosComponent} from './components/usuarios/lista-usuarios/lista-usuarios.component';
 import {FormularioUsuariosComponent} from './components/usuarios/formulario-usuarios/formulario-usuarios.component';
+import { ListaUnidadesComponent } from './components/medidas/lista-unidades/lista-unidades.component';
+import { FormularioUnidadesComponent } from './components/medidas/formulario-unidades/formulario-unidades.component';
 
 export const routes: Routes = [
   {
@@ -25,6 +27,8 @@ export const routes: Routes = [
     children: [
       { path: 'lista-usuarios', component: ListaUsuariosComponent },
       { path: 'formulario-usuarios', component: FormularioUsuariosComponent},
+      { path: 'lista-medidas', component: ListaUnidadesComponent },
+      { path: 'formulario-medidas', component: FormularioUnidadesComponent }
     ]
   }
 ];

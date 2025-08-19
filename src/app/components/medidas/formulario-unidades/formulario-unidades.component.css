@@ -1,0 +1,40 @@
+mat-card-content {
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  max-height: 400px; /* Ajuste conforme necessário */
+}
+.medidas-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 24px;
+}
+
+.linha-campos {
+  display: flex;
+  gap: 16px;
+  width: 100%;
+}
+
+.half-width {
+  flex: 1 1 0;
+}
+
+.full-width {
+  width: 100%;
+}
+
+.botoes {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+  margin-top: 16px;
+}
+
+:host {
+  display: block;
+  margin-top: 5px;
+  margin-right: 10px;
+}
+

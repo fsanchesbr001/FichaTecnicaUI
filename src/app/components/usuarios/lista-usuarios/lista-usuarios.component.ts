@@ -39,6 +39,7 @@ export class ListaUsuariosComponent implements AfterViewInit{
   ngAfterViewInit() {
     this.dataSource.paginator = this.paginator;
   }
+
   constructor(private router: Router) {}
 
   onEditar() {

@@ -4,6 +4,10 @@ import {ListaUsuariosComponent} from './components/usuarios/lista-usuarios/lista
 import {FormularioUsuariosComponent} from './components/usuarios/formulario-usuarios/formulario-usuarios.component';
 import { ListaUnidadesComponent } from './components/medidas/lista-unidades/lista-unidades.component';
 import { FormularioUnidadesComponent } from './components/medidas/formulario-unidades/formulario-unidades.component';
+import {ListaConversoesComponent} from './components/conversoes/lista-conversoes/lista-conversoes.component';
+import {
+  FormularioConversoesComponent
+} from './components/conversoes/formulario-conversoes/formulario-conversoes.component';
 
 export const routes: Routes = [
   {
@@ -28,7 +32,9 @@ export const routes: Routes = [
       { path: 'lista-usuarios', component: ListaUsuariosComponent },
       { path: 'formulario-usuarios', component: FormularioUsuariosComponent},
       { path: 'lista-medidas', component: ListaUnidadesComponent },
-      { path: 'formulario-medidas', component: FormularioUnidadesComponent }
+      { path: 'formulario-medidas', component: FormularioUnidadesComponent },
+      { path: 'lista-conversoes', component: ListaConversoesComponent },
+      { path: 'formulario-conversoes', component: FormularioConversoesComponent }
     ]
   }
 ];

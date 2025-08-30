@@ -34,6 +34,14 @@ export class MenuPrincipalComponent {
       ]
     },
     {
+      label: 'Conversões',
+      isOpen: false,
+      submenus: [
+        { label: 'Gerenciar',
+          routePath: '/principal/lista-conversoes' }
+      ]
+    },
+    {
       label: 'Usuários',
       isOpen: false,
       submenus: [

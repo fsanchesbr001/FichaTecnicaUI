@@ -1,0 +1,75 @@
+.lista-conversoes-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+
+.lista-conversoes-table-container {
+  width: 100%;
+  overflow-x: auto;
+}
+
+table {
+  width: 100%;
+  min-width: 600px;
+}
+
+.col-unidadeDeOrigem {
+  width: 20%;
+  min-width: 120px;
+}
+
+.col-unidadeDeDestino {
+  width: 20%;
+  min-width: 120px;
+}
+
+.col-operacao {
+  width: 20%;
+  min-width: 120px;
+}
+
+.col-fator {
+  width: 20%;
+  min-width: 120px;
+}
+
+.col-acoes {
+  width: 20%;
+  min-width: 120px;
+}
+
+.col-unidadeDeOrigem, .col-unidadeDeDestino, .col-operacao,.col-fator, .col-acoes {
+  width: auto;
+  min-width: 80px;
+}
+.lista-conversoes-header {
+  flex-direction: column;
+  gap: 6px;
+}
+
+.lista-conversoes-titulo {
+  text-align: center;
+  margin-bottom: 16px;
+}
+
+:host {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: center;
+  height: 100%;
+  width: 100%;
+  margin: 0;
+  padding: 0 10px 0 0;
+  box-sizing: border-box;
+}
+
+@media (max-width: 600px) {
+  table {
+    min-width: 0;
+    font-size: 13px;
+  }
+}

@@ -8,6 +8,9 @@ import {ListaConversoesComponent} from './components/conversoes/lista-conversoes
 import {
   FormularioConversoesComponent
 } from './components/conversoes/formulario-conversoes/formulario-conversoes.component';
+import {ListaItemComponent} from './components/item/lista-item/lista-item.component';
+import {FormularioItemComponent} from './components/item/formulario-item/formulario-item.component';
+import {ListaHistoricoItemComponent} from './components/item/lista-historico-item/lista-historico-item.component';
 
 export const routes: Routes = [
   {
@@ -34,7 +37,10 @@ export const routes: Routes = [
       { path: 'lista-medidas', component: ListaUnidadesComponent },
       { path: 'formulario-medidas', component: FormularioUnidadesComponent },
       { path: 'lista-conversoes', component: ListaConversoesComponent },
-      { path: 'formulario-conversoes', component: FormularioConversoesComponent }
+      { path: 'formulario-conversoes', component: FormularioConversoesComponent },
+      { path: 'lista-item', component: ListaItemComponent },
+      { path: 'formulario-item',component: FormularioItemComponent},
+      { path: 'lista-historico-item', component: ListaHistoricoItemComponent },
     ]
   }
 ];

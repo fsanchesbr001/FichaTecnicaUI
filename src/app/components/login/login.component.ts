@@ -7,6 +7,9 @@ import {MatSnackBar} from "@angular/material/snack-bar";
 import {NgOptimizedImage} from "@angular/common";
 import {MatButton} from "@angular/material/button";
 import {RouterLink, Router} from "@angular/router";
+import {AuthService} from "../../services/auth.service";
+import {Usuario} from '../../model/usuario.model';
+import {HttpErrorResponse} from '@angular/common/http';
 @Component({
   selector: 'app-login',
   imports: [
@@ -33,6 +36,7 @@ import {RouterLink, Router} from "@angular/router";
   styleUrl: './login.component.css'
 })
 export class LoginComponent {
+  usuario! :Usuario;
   loginForm = new FormGroup({
     email: new FormControl('', [
       Validators.required,
@@ -47,7 +51,9 @@ export class LoginComponent {
   });
 
 
-  constructor(private snackBar: MatSnackBar, private router: Router) {}
+  constructor(private snackBar: MatSnackBar, private router: Router, private authService: AuthService) {
+    this.usuario = new Usuario();
+  }
 
 
 
@@ -60,13 +66,45 @@ export class LoginComponent {
   }
 
   onSubmit() {
+    console.log('=== FORM SUBMIT ===');
+    console.log('Formulário válido?', this.loginForm.valid);
+    console.log('Valores do formulário:', this.loginForm.value);
+
     if (this.loginForm.valid) {
-      this.snackBar.open('Login realizado com sucesso!', 'Fechar', {
-        duration: 3000
-      });
-      this.router.navigate(['/principal/lista-usuarios']);
-      // Aqui você implementaria a lógica real de login
+      const emailValue = this.loginForm.get('email')?.value;
+      const passwordValue = this.loginForm.get('password')?.value;
+
+      console.log('Email:', emailValue);
+      console.log('Senha:', passwordValue ? '***' : 'vazia');
+
+      if (emailValue && passwordValue) {
+        this.usuario.login = emailValue;
+        this.usuario.senha = passwordValue;
+
+        console.log('Chamando authService.login()...');
+
+        this.authService.login(this.usuario).subscribe(
+          {
+            next: (token)=>{
+              console.log(JSON.stringify(token));
+              this.snackBar.open('Login realizado com sucesso!', 'Fechar', {
+                duration: 3000
+              });
+              this.router.navigate(['/principal/lista-usuarios']);
+            },
+            error: (erro:HttpErrorResponse)=>{
+              console.error('❌ Erro ao realizar login:', erro);
+              const errorMessage = erro?.error?.message || 'Erro ao realizar login. Verifique suas credenciais.';
+              this.snackBar.open(errorMessage, 'Fechar', {
+                duration: 5000
+              });
+            }
+          });
+      } else {
+        console.warn('Email ou senha vazios');
+      }
     } else {
+      console.warn('Formulário inválido');
       this.snackBar.open('Por favor, corrija os erros no formulário.', 'Fechar', {
         duration: 3000
       });

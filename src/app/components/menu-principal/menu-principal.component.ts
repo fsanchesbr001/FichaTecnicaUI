@@ -29,7 +29,7 @@ export class MenuPrincipalComponent {
       label: 'Medidas',
       isOpen: false,
       submenus: [
-        { label: 'Gerenciar',
+        { label: 'Gerenciar Medidas',
           routePath: '/principal/lista-medidas' }
       ]
     },
@@ -37,7 +37,7 @@ export class MenuPrincipalComponent {
       label: 'Conversões',
       isOpen: false,
       submenus: [
-        { label: 'Gerenciar',
+        { label: 'Gerenciar Conversões',
           routePath: '/principal/lista-conversoes' }
       ]
     },
@@ -45,7 +45,7 @@ export class MenuPrincipalComponent {
       label: 'Usuários',
       isOpen: false,
       submenus: [
-        { label: 'Gerenciar',
+        { label: 'Gerenciar Usuários',
           routePath: '/principal/lista-usuarios' },
       ]
     },
@@ -53,7 +53,7 @@ export class MenuPrincipalComponent {
       label: 'Sistema',
       isOpen: false,
       submenus: [
-        { label: 'Sobre' }
+        { label: 'Sair' }
       ]
     }
   ];

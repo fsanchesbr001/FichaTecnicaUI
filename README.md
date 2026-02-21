@@ -73,3 +73,4 @@ For more information on using the Angular CLI, including detailed command refere
 - 1.0.10 - Ligando links e abrir formularios na seção principal.
 - 1.0.11 - Adicionado componentes de Unidade de Medida.
 - 1.0.12 - Adicionado componentes de Conversão.
+- 1.0.13 - Chamando o Login no backend.

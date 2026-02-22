@@ -58,8 +58,9 @@ table {
   height: 100%;
   width: 100%;
   margin: 0;
-  padding: 0 10px 0 0;
+  padding: 16px 10px 80px 16px;
   box-sizing: border-box;
+  overflow-y: auto;
 }
 
 @media (max-width: 600px) {

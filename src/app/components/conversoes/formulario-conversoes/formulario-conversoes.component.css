@@ -1,14 +1,41 @@
+:host {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  width: 100%;
+  margin: 0;
+  padding: 5px;
+  box-sizing: border-box;
+}
+
+:host > div {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  width: 100%;
+}
+
+:host > div > mat-card {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  width: 100%;
+  margin: 0;
+}
+
 mat-card-content {
   display: flex;
   flex-direction: column;
   overflow-y: auto;
-  max-height: 400px; /* Ajuste conforme necessário */
+  flex: 1;
 }
+
 .conversoes-header {
   display: flex;
   flex-direction: column;
   align-items: center;
   margin-bottom: 24px;
+  flex-shrink: 0;
 }
 
 .linha-campos {
@@ -31,12 +58,7 @@ mat-card-content {
   justify-content: flex-end;
   flex-wrap: wrap;
   margin-top: 16px;
-}
-
-:host {
-  display: block;
-  margin-top: 5px;
-  margin-right: 10px;
+  flex-shrink: 0;
 }
 
 @media (max-width: 600px) {

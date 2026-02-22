@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-import {CommonModule, NgOptimizedImage} from '@angular/common';
+import {CommonModule} from '@angular/common';
 import {MatCard, MatCardContent} from '@angular/material/card';
 import {Router} from '@angular/router';
 
@@ -17,7 +17,7 @@ interface Menu {
 
 @Component({
   selector: 'app-menu-principal',
-  imports: [CommonModule, MatCard, MatCardContent, NgOptimizedImage],
+  imports: [CommonModule, MatCard, MatCardContent],
   templateUrl: './menu-principal.component.html',
   styleUrl: './menu-principal.component.css'
 })
@@ -39,6 +39,14 @@ export class MenuPrincipalComponent {
       submenus: [
         { label: 'Gerenciar Conversões',
           routePath: '/principal/lista-conversoes' }
+      ]
+    },
+    {
+      label: 'Itens em estoque',
+      isOpen: false,
+      submenus: [
+        { label: 'Gerenciar Itens',
+          routePath: '/principal/lista-item' }
       ]
     },
     {

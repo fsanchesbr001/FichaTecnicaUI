@@ -1,0 +1,66 @@
+.lista-medidas-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+
+.lista-medidas-table-container {
+  width: 100%;
+  overflow-x: auto;
+}
+
+table {
+  width: 100%;
+  min-width: 600px;
+}
+
+.col-nome {
+  width: 70%;
+  min-width: 120px;
+}
+
+.col-sigla {
+  width: 10%;
+  min-width: 120px;
+}
+
+.col-acoes {
+  width: 20%;
+  min-width: 120px;
+}
+
+.col-nome, .col-sigla, .col-acoes {
+  width: auto;
+  min-width: 80px;
+}
+.lista-medidas-header {
+  flex-direction: column;
+  gap: 6px;
+}
+
+.lista-medidas-titulo {
+  text-align: center;
+  margin-bottom: 16px;
+}
+
+:host {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: center;
+  height: 100%;
+  width: 100%;
+  margin: 0;
+  padding: 16px 10px 80px 16px;
+  box-sizing: border-box;
+  overflow-y: auto;
+}
+
+@media (max-width: 600px) {
+  table {
+    min-width: 0;
+    font-size: 13px;
+  }
+}

@@ -76,3 +76,4 @@ For more information on using the Angular CLI, including detailed command refere
 - 1.0.13 - Chamando o Login no backend.
 - 1.0.14 - Melhorias de layout e paginação e lista de itens.
 - 1.0.15 - Adicionado informações de Usuário na tela.
+- 1.0.16 - Melhorias de experiência do usuário no menu lateral.

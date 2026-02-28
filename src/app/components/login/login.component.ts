@@ -8,6 +8,7 @@ import {NgOptimizedImage} from "@angular/common";
 import {MatButton} from "@angular/material/button";
 import {RouterLink, Router} from "@angular/router";
 import {AuthService} from "../../services/auth.service";
+import {JwtService} from "../../services/jwt.service";
 import {Usuario} from '../../model/usuario.model';
 import {HttpErrorResponse} from '@angular/common/http';
 @Component({
@@ -51,7 +52,7 @@ export class LoginComponent {
   });
 
 
-  constructor(private snackBar: MatSnackBar, private router: Router, private authService: AuthService) {
+  constructor(private snackBar: MatSnackBar, private router: Router, private authService: AuthService, private jwtService: JwtService) {
     this.usuario = new Usuario();
   }
 
@@ -87,6 +88,10 @@ export class LoginComponent {
           {
             next: (token)=>{
               console.log(JSON.stringify(token));
+              // Armazenar o token JWT
+              if (token.jwt) {
+                this.jwtService.setToken(token.jwt);
+              }
               this.snackBar.open('Login realizado com sucesso!', 'Fechar', {
                 duration: 3000
               });

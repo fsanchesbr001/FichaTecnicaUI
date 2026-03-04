@@ -9,6 +9,7 @@ import {MatButton} from "@angular/material/button";
 import {RouterLink, Router} from "@angular/router";
 import {AuthService} from "../../services/auth.service";
 import {JwtService} from "../../services/jwt.service";
+import {PaginaErroService} from "../../services/pagina-erro.service";
 import {Usuario} from '../../model/usuario.model';
 import {HttpErrorResponse} from '@angular/common/http';
 @Component({
@@ -52,7 +53,13 @@ export class LoginComponent {
   });
 
 
-  constructor(private snackBar: MatSnackBar, private router: Router, private authService: AuthService, private jwtService: JwtService) {
+  constructor(
+    private snackBar: MatSnackBar,
+    private router: Router,
+    private authService: AuthService,
+    private jwtService: JwtService,
+    private paginaErroService: PaginaErroService
+  ) {
     this.usuario = new Usuario();
   }
 
@@ -99,10 +106,22 @@ export class LoginComponent {
             },
             error: (erro:HttpErrorResponse)=>{
               console.error('❌ Erro ao realizar login:', erro);
-              const errorMessage = erro?.error?.message || 'Erro ao realizar login. Verifique suas credenciais.';
-              this.snackBar.open(errorMessage, 'Fechar', {
-                duration: 5000
-              });
+
+              // Extrai a mensagem do campo 'jwt' ou 'message' do objeto de erro
+              let errorMessage = erro?.error?.jwt || erro?.error?.message || 'Erro ao realizar login. Verifique suas credenciais.';
+
+              // Se a mensagem começa com BLQADM, exibe a página de erro
+              if (errorMessage.startsWith('BLQADM')) {
+                // Remove o prefixo BLQADM da mensagem
+                const mensagemLimpa = errorMessage.substring(6).trim();
+                this.paginaErroService.definirErro(mensagemLimpa, '/');
+                this.router.navigate(['/erro']);
+              } else {
+                // Caso contrário, mostra o snackbar
+                this.snackBar.open(errorMessage, 'Fechar', {
+                  duration: 5000
+                });
+              }
             }
           });
       } else {

@@ -11,6 +11,7 @@ import {
 import {ListaItemComponent} from './components/item/lista-item/lista-item.component';
 import {FormularioItemComponent} from './components/item/formulario-item/formulario-item.component';
 import {ListaHistoricoItemComponent} from './components/item/lista-historico-item/lista-historico-item.component';
+import {PaginaErroComponent} from './components/pagina-erro/pagina-erro.component';
 
 export const routes: Routes = [
   {
@@ -27,6 +28,10 @@ export const routes: Routes = [
     path: 'solicitar-token',
     loadComponent: () => import('./components/solicitar-token/solicitar-token.component')
       .then(m => m.SolicitarTokenComponent)
+  },
+  {
+    path: 'erro',
+    component: PaginaErroComponent
   },
   {
     path: 'principal',

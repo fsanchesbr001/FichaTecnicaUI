@@ -73,6 +73,30 @@ export class LoginComponent {
     return this.loginForm.get('password');
   }
 
+  private isCodigoBloqueio(message: string): boolean {
+    const normalizedMessage = message.trim().toUpperCase();
+    return normalizedMessage.startsWith('BLQADM') || normalizedMessage.startsWith('BLQSNF');
+  }
+
+  private limparMensagemBloqueio(message: string): string {
+    const withoutCode = message.substring(6).trim().replace(/^[-\u2013\u2014]\s*/, '');
+    return withoutCode || 'Seu acesso foi bloqueado. Entre em contato com o administrador.';
+  }
+
+  private extrairMensagemErro(erro: HttpErrorResponse): string {
+    if (typeof erro?.error === 'string') {
+      return erro.error;
+    }
+
+    return erro?.error?.jwt || erro?.error?.message || 'Erro ao realizar login. Verifique suas credenciais.';
+  }
+
+  private redirecionarParaPaginaErro(errorMessage: string): void {
+    const mensagemLimpa = this.limparMensagemBloqueio(errorMessage);
+    this.paginaErroService.definirErro(mensagemLimpa, '/');
+    this.router.navigate(['/erro']);
+  }
+
   onSubmit() {
     console.log('=== FORM SUBMIT ===');
     console.log('Formulário válido?', this.loginForm.valid);
@@ -94,7 +118,20 @@ export class LoginComponent {
         this.authService.login(this.usuario).subscribe(
           {
             next: (token)=>{
-              console.log(JSON.stringify(token));
+              console.log('=== FLUXO NEXT (SUCESSO) ===');
+              console.log('Token completo:', JSON.stringify(token));
+              console.log('token.jwt:', token?.jwt);
+
+              const jwtMessage = token?.jwt?.trim() || '';
+              console.log('jwtMessage após trim:', jwtMessage);
+              console.log('É código de bloqueio?', this.isCodigoBloqueio(jwtMessage));
+
+              if (jwtMessage && this.isCodigoBloqueio(jwtMessage)) {
+                console.log('✅ Redirecionando para página de erro (NEXT)');
+                this.redirecionarParaPaginaErro(jwtMessage);
+                return;
+              }
+
               // Armazenar o token JWT
               if (token.jwt) {
                 this.jwtService.setToken(token.jwt);
@@ -105,19 +142,21 @@ export class LoginComponent {
               this.router.navigate(['/principal/lista-usuarios']);
             },
             error: (erro:HttpErrorResponse)=>{
-              console.error('❌ Erro ao realizar login:', erro);
+              console.log('=== FLUXO ERROR ===');
+              console.error('Erro completo:', erro);
+              console.log('erro.error:', erro?.error);
+              console.log('Tipo de erro.error:', typeof erro?.error);
 
-              // Extrai a mensagem do campo 'jwt' ou 'message' do objeto de erro
-              let errorMessage = erro?.error?.jwt || erro?.error?.message || 'Erro ao realizar login. Verifique suas credenciais.';
+              const errorMessage = this.extrairMensagemErro(erro);
+              console.log('errorMessage extraída:', errorMessage);
+              console.log('É código de bloqueio?', this.isCodigoBloqueio(errorMessage));
 
-              // Se a mensagem começa com BLQADM, exibe a página de erro
-              if (errorMessage.startsWith('BLQADM')) {
-                // Remove o prefixo BLQADM da mensagem
-                const mensagemLimpa = errorMessage.substring(6).trim();
-                this.paginaErroService.definirErro(mensagemLimpa, '/');
-                this.router.navigate(['/erro']);
+              if (this.isCodigoBloqueio(errorMessage)) {
+                console.log('✅ Redirecionando para página de erro (ERROR)');
+                this.redirecionarParaPaginaErro(errorMessage);
               } else {
-                // Caso contrário, mostra o snackbar
+                console.log('❌ Mostrando snackbar');
+                // Caso contrario, mostra o snackbar
                 this.snackBar.open(errorMessage, 'Fechar', {
                   duration: 5000
                 });

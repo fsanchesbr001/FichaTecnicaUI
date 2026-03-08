@@ -33,8 +33,9 @@
 }
 
 .mensagem-texto {
-  font-size: 18px;
-  color: #333;
+  font-size: 12px;
+  color: #1976d2;
+  font-weight: 600;
   line-height: 1.6;
   margin: 0;
   font-family: 'Roboto', sans-serif;
@@ -53,4 +54,3 @@ button {
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
-

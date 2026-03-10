@@ -1,11 +1,14 @@
-import { Component, Input,ViewChild,AfterViewInit} from '@angular/core';
-import {MatIconModule} from '@angular/material/icon';
-import {MatTableModule} from '@angular/material/table';
-import {MatButtonModule} from '@angular/material/button';
-import {MatTooltipModule} from '@angular/material/tooltip';
+import { Component, Input, ViewChild, AfterViewInit, OnInit } from '@angular/core';
+import { MatIconModule } from '@angular/material/icon';
+import { MatTableModule } from '@angular/material/table';
+import { MatButtonModule } from '@angular/material/button';
+import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatPaginator, MatPaginatorModule } from '@angular/material/paginator';
 import { MatTableDataSource } from '@angular/material/table';
+import { MatSnackBar } from '@angular/material/snack-bar';
 import { Router } from '@angular/router';
+import { HttpClient } from '@angular/common/http';
+import { environment } from '../../../../../environments/environment';
 
 export interface Usuario {
   nome: string;
@@ -26,21 +29,43 @@ export interface Usuario {
   templateUrl: './lista-usuarios.component.html',
   styleUrls: ['./lista-usuarios.component.css']
 })
-export class ListaUsuariosComponent implements AfterViewInit{
-  @Input() usuarios: Usuario[] = [{ nome: 'João Silva', email: 'joao@email.com', role: 'Admin' },
-    { nome: 'Maria Souza', email: 'maria@email.com', role: 'User' },
-    { nome: 'Carlos Lima', email: 'carlos@email.com', role: 'Editor' }];
+export class ListaUsuariosComponent implements AfterViewInit, OnInit {
+  @Input() usuarios: Usuario[] = [];
   displayedColumns = ['nome', 'email', 'role', 'acoes'];
 
   dataSource = new MatTableDataSource<Usuario>(this.usuarios);
 
   @ViewChild(MatPaginator) paginator!: MatPaginator;
 
+  private readonly urlListarUsuarios = `${environment.API}ficha-tecnica/usuarios/listar-todos-usuarios`;
+
+  constructor(
+    private router: Router,
+    private http: HttpClient,
+    private snackBar: MatSnackBar
+  ) {}
+
+  ngOnInit(): void {
+    this.carregarUsuarios();
+  }
+
   ngAfterViewInit() {
     this.dataSource.paginator = this.paginator;
   }
 
-  constructor(private router: Router) {}
+  carregarUsuarios(): void {
+    this.http.get<Usuario[]>(this.urlListarUsuarios).subscribe({
+      next: (dados) => {
+        this.dataSource.data = dados ?? [];
+      },
+      error: () => {
+        this.dataSource.data = [];
+        this.snackBar.open('ERRO DE CHAMADA HTTP', 'Fechar', {
+          duration: 5000
+        });
+      }
+    });
+  }
 
   onEditar() {
     this.router.navigate(['/principal/formulario-usuarios']);

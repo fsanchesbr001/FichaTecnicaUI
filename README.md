@@ -79,3 +79,4 @@ For more information on using the Angular CLI, including detailed command refere
 - 1.0.16 - Melhorias de experiência do usuário no menu lateral.
 - 1.0.17 - Tratamento de erros de login e mensagens de erro.
 - 1.0.18 - Melhorando o tratamento de erros de Login.
+- 1.0.19 - Adicionado chamada a lista de Usuarios.

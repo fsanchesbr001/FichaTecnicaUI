@@ -40,10 +40,10 @@
           </mat-form-field>
 
           <mat-form-field class="full-width" appearance="fill">
-            <mat-label>Role</mat-label>
+            <mat-label>Perfil</mat-label>
             <mat-select formControlName="role" required>
-              @for (r of roles; track r) {
-                <mat-option [value]="r">{{ r }}</mat-option>
+              @for (r of roles; track r.value) {
+                <mat-option [value]="r.value">{{ r.label }}</mat-option>
               }
             </mat-select>
             <mat-icon matSuffix>supervisor_account</mat-icon>

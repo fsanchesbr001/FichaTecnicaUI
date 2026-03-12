@@ -76,6 +76,7 @@ export class FormularioUsuariosComponent implements OnInit {
   @Input() usuario: any;
   form!: FormGroup;
   roles: Role[] = [];
+  salvando = false;
   private usuarioParaEditar: any = null;
 
   private readonly urlRoles = `${environment.API}ficha-tecnica/usuarios/roles`;
@@ -182,6 +183,8 @@ export class FormularioUsuariosComponent implements OnInit {
       return;
     }
 
+    this.salvando = true;
+
     if (this.usuarioParaEditar) {
       this.atualizarUsuario();
     } else {
@@ -205,6 +208,7 @@ export class FormularioUsuariosComponent implements OnInit {
         this.abrirDialogoSucesso('Usuário registrado com sucesso.');
       },
       error: () => {
+        this.salvando = false;
         this.snackBar.open('ERRO DE CHAMADA HTTP', 'Fechar', { duration: 5000 });
       }
     });
@@ -228,6 +232,7 @@ export class FormularioUsuariosComponent implements OnInit {
         this.abrirDialogoSucesso('Registro atualizado com sucesso.');
       },
       error: () => {
+        this.salvando = false;
         this.snackBar.open('ERRO DE CHAMADA HTTP', 'Fechar', { duration: 5000 });
       }
     });

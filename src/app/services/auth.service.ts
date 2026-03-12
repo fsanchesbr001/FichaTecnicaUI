@@ -11,6 +11,7 @@ import {TokenJwt} from '../model/tokenJwt.model';
 
 export class AuthService {
   private readonly urlAddress:string = `${environment.API}auth/login`;
+  private readonly logoutUrl:string = `${environment.API}auth/logout`;
   private readonly sitePermitido:string = `${environment.CORS_ORIGIN_ALLOWED}`;
 
   constructor(private http:HttpClient) {}
@@ -29,6 +30,14 @@ export class AuthService {
           'Access-Control-Allow-Origin':`${this.sitePermitido}`,
           'Access-Control-Allow-Headers':'Content-Type'
           }}).pipe(take(1));
+  }
+
+  /**
+   * Realiza logout na aplicação
+   * @returns Observable com o resultado do logout
+   */
+  logout(): Observable<any> {
+    return this.http.post<any>(this.logoutUrl, {}).pipe(take(1));
   }
 }
 

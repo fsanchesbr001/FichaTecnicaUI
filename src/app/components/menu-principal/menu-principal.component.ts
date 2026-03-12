@@ -3,6 +3,8 @@ import {CommonModule} from '@angular/common';
 import {MatCard, MatCardContent} from '@angular/material/card';
 import {Router, NavigationEnd} from '@angular/router';
 import {filter} from 'rxjs/operators';
+import {AuthService} from '../../services/auth.service';
+import {JwtService} from '../../services/jwt.service';
 
 interface Submenu {
   label: string;
@@ -23,7 +25,7 @@ interface Menu {
   styleUrl: './menu-principal.component.css'
 })
 export class MenuPrincipalComponent implements OnInit {
-  constructor(private router: Router) {}
+  constructor(private router: Router, private authService: AuthService, private jwtService: JwtService) {}
 
   ngOnInit(): void {
     // Detecta a rota atual ao inicializar o componente
@@ -111,6 +113,12 @@ export class MenuPrincipalComponent implements OnInit {
   }
 
   selectSubmenu(submenu: Submenu) {
+    // Trata o logout separadamente
+    if (submenu.label === 'Sair') {
+      this.realizarLogout();
+      return;
+    }
+
     this.selectedSubmenu = submenu.label;
 
     // Fechar todos os menus e abrir apenas o menu pai do submenu clicado
@@ -123,5 +131,22 @@ export class MenuPrincipalComponent implements OnInit {
     if (submenu.routePath) {
       this.router.navigate([submenu.routePath]);
     }
+  }
+
+  /**
+   * Chama o endpoint de logout, limpa o token e redireciona para o login
+   */
+  private realizarLogout(): void {
+    this.authService.logout().subscribe({
+      next: () => {
+        this.jwtService.removeToken();
+        this.router.navigate(['']);
+      },
+      error: () => {
+        // Mesmo em caso de erro, limpa o token e redireciona
+        this.jwtService.removeToken();
+        this.router.navigate(['']);
+      }
+    });
   }
 }

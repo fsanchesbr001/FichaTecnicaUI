@@ -90,7 +90,7 @@
           </div>
         </div>
         <div class="botoes">
-          <button mat-raised-button color="primary" (click)="onSalvar()" [disabled]="form.invalid">
+          <button mat-raised-button color="primary" (click)="onSalvar()" [disabled]="form.invalid || salvando">
             <mat-icon>save</mat-icon> Salvar
           </button>
           <button mat-raised-button color="warn" (click)="onCancelar()">

@@ -79,9 +79,10 @@ export class FormularioUsuariosComponent implements OnInit {
   salvando = false;
   private usuarioParaEditar: any = null;
 
-  private readonly urlRoles = `${environment.API}ficha-tecnica/usuarios/roles`;
+  private readonly urlRoles            = `${environment.API}ficha-tecnica/usuarios/roles`;
   private readonly urlRegistrarUsuario = `${environment.API}ficha-tecnica/usuarios/registrar-usuario`;
   private readonly urlAtualizarUsuario = `${environment.API}ficha-tecnica/usuarios/atualizar-usuario`;
+  private readonly urlGerarPdf         = `${environment.API}ficha-tecnica/relatorios/gerar-pdf`;
 
   constructor(
     private fb: FormBuilder,
@@ -254,6 +255,73 @@ export class FormularioUsuariosComponent implements OnInit {
   }
 
   onImprimir(): void {
-    console.log('Imprimindo formulário...');
+    const valores = this.form.getRawValue();
+
+    // Monta o objeto do usuário combinando os dados do formulário
+    // com campos extras que só existem no modo edição (usuarioParaEditar)
+    const usuarioData = {
+      nome:                  valores.nome,
+      email:                 valores.email,
+      cpf:                   valores.cpf,
+      role:                  valores.role,
+      tentativas:            valores.tentativas,
+      bloqueado_admin:       valores.bloqueioAdm,
+      bloqueado_tentativas:  valores.bloqueioTentativas,
+      bloqueado_expiracao:   valores.bloqueioExpiracao,
+      primeiro_acesso:       valores.primeiroAcesso,
+      dataExpiracaoSenha:    valores.dataExpiracao
+                               ? new Date(valores.dataExpiracao).toISOString()
+                               : null,
+      tokenSeguranca:        this.usuarioParaEditar?.tokenSeguranca    ?? null,
+      dataCriacao:           this.usuarioParaEditar?.dataCriacao       ?? null,
+      dataExpiracaoToken:    this.usuarioParaEditar?.dataExpiracaoToken ?? null,
+    };
+
+    const body = {
+      jsonData: JSON.stringify([usuarioData]),
+      listPath: '',
+      titulo: 'Detalhe de Usuário',
+      colunas: {
+        nome:                  'Nome do Usuário',
+        email:                 'E-mail',
+        cpf:                   'C.P.F',
+        role:                  'Perfil',
+        dataCriacao:           'Criado em',
+        tokenSeguranca:        'Id. Segurança',
+        dataExpiracaoToken:    'Expira Id em',
+        tentativas:            'Tentativas Permitidas',
+        dataExpiracaoSenha:    'Expira Senha em',
+        bloqueado_admin:       'Bloqueio Administrativo',
+        bloqueado_tentativas:  'Bloqueio Tentativas',
+        bloqueado_expiracao:   'Bloqueio Expiração Senha',
+        primeiro_acesso:       'Primeiro Acesso',
+      },
+      tipoRelatorio: 'DETALHE',
+      orientacao:    'PAISAGEM',
+      alternarCores: false,
+    };
+
+    this.http.post(this.urlGerarPdf, body, { responseType: 'blob' }).subscribe({
+      next: (blob) => {
+        const now  = new Date();
+        const aaaa = now.getFullYear().toString();
+        const mm   = (now.getMonth() + 1).toString().padStart(2, '0');
+        const dd   = now.getDate().toString().padStart(2, '0');
+        const hh   = now.getHours().toString().padStart(2, '0');
+        const min  = now.getMinutes().toString().padStart(2, '0');
+        const ss   = now.getSeconds().toString().padStart(2, '0');
+        const filename = `relatorio_detalhado_usuario_${aaaa}${mm}${dd}_${hh}${min}${ss}.pdf`;
+
+        const url    = URL.createObjectURL(blob);
+        const anchor = document.createElement('a');
+        anchor.href     = url;
+        anchor.download = filename;
+        anchor.click();
+        URL.revokeObjectURL(url);
+      },
+      error: () => {
+        this.snackBar.open('ERRO AO GERAR PDF', 'Fechar', { duration: 5000 });
+      }
+    });
   }
 }

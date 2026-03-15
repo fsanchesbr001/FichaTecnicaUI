@@ -82,3 +82,4 @@ For more information on using the Angular CLI, including detailed command refere
 - 1.0.19 - Adicionado chamada a lista de Usuarios.
 - 1.0.20 - Fluxo de Usuário para criar, editar e excluir usuários.
 - 1.0.21 - Submenu Sair funcionando e melhorias de layout.
+- 1.0.22 - Adicionado componente de Relatórios e finalizando Usuário.

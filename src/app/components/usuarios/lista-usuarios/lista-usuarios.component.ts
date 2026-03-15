@@ -49,6 +49,7 @@ export class ListaUsuariosComponent implements AfterViewInit, OnInit {
 
   private readonly urlListarUsuarios = `${environment.API}ficha-tecnica/usuarios/listar-todos-usuarios`;
   private readonly urlExcluirUsuario  = `${environment.API}ficha-tecnica/usuarios/excluir-usuario`;
+  private readonly urlGerarPdf        = `${environment.API}ficha-tecnica/relatorios/gerar-pdf`;
 
   constructor(
     private router: Router,
@@ -102,6 +103,45 @@ export class ListaUsuariosComponent implements AfterViewInit, OnInit {
       },
       error: () => {
         this.snackBar.open('ERRO AO EXCLUIR USUÁRIO.', 'Fechar', { duration: 5000 });
+      }
+    });
+  }
+
+  onImprimir(): void {
+    const body = {
+      jsonData: JSON.stringify(this.dataSource.data),
+      listPath: '',
+      titulo: 'Lista de Usuários',
+      colunas: {
+        nome:  'Nome do Usuário',
+        email: 'E-mail',
+        role:  'Perfil'
+      },
+      tipoRelatorio: 'LISTA',
+      orientacao: 'RETRATO',
+      alternarCores: true
+    };
+
+    this.http.post(this.urlGerarPdf, body, { responseType: 'blob' }).subscribe({
+      next: (blob) => {
+        const now = new Date();
+        const aaaa = now.getFullYear().toString();
+        const mm   = (now.getMonth() + 1).toString().padStart(2, '0');
+        const dd   = now.getDate().toString().padStart(2, '0');
+        const hh   = now.getHours().toString().padStart(2, '0');
+        const min  = now.getMinutes().toString().padStart(2, '0');
+        const ss   = now.getSeconds().toString().padStart(2, '0');
+        const filename = `lista-usuarios-${aaaa}${mm}${dd}-${hh}:${min}:${ss}.pdf`;
+
+        const url = URL.createObjectURL(blob);
+        const anchor = document.createElement('a');
+        anchor.href = url;
+        anchor.download = filename;
+        anchor.click();
+        URL.revokeObjectURL(url);
+      },
+      error: () => {
+        this.snackBar.open('ERRO AO GERAR PDF', 'Fechar', { duration: 5000 });
       }
     });
   }

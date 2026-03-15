@@ -1,5 +1,6 @@
-import { Component, Input, OnInit, LOCALE_ID } from '@angular/core';
+import { Component, Input, OnInit, LOCALE_ID, DestroyRef, inject } from '@angular/core';
 import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { MatCard, MatCardContent, MatCardHeader, MatCardTitle } from '@angular/material/card';
 import { MatError, MatFormField, MatInput, MatLabel, MatSuffix } from '@angular/material/input';
 import { MatIcon } from '@angular/material/icon';
@@ -10,14 +11,12 @@ import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatOption, MatSelect } from '@angular/material/select';
 import { MatSlideToggle } from '@angular/material/slide-toggle';
 import { MAT_DATE_LOCALE, MAT_DATE_FORMATS, provideNativeDateAdapter } from '@angular/material/core';
-import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import localePt from '@angular/common/locales/pt';
 import { validateCPF } from '../../../validators/cpf.validator';
 import { Router, Navigation } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
-import { MatSnackBar } from '@angular/material/snack-bar';
 import { environment } from '../../../../../environments/environment';
-import { DialogoInformacaoComponent } from '../../shared/dialogo-informacao/dialogo-informacao.component';
+import { ToastService } from '../../../services/toast.service';
 
 registerLocaleData(localePt);
 
@@ -61,7 +60,6 @@ export const MY_DATE_FORMATS = {
     MatSelect,
     MatSlideToggle,
     NgxMaskDirective,
-    MatDialogModule,
   ],
   providers: [
     { provide: LOCALE_ID, useValue: 'pt-BR' },
@@ -77,7 +75,8 @@ export class FormularioUsuariosComponent implements OnInit {
   form!: FormGroup;
   roles: Role[] = [];
   salvando = false;
-  private usuarioParaEditar: any = null;
+  protected usuarioParaEditar: any = null;
+  private readonly destroyRef = inject(DestroyRef);
 
   private readonly urlRoles            = `${environment.API}ficha-tecnica/usuarios/roles`;
   private readonly urlRegistrarUsuario = `${environment.API}ficha-tecnica/usuarios/registrar-usuario`;
@@ -88,8 +87,7 @@ export class FormularioUsuariosComponent implements OnInit {
     private fb: FormBuilder,
     private router: Router,
     private http: HttpClient,
-    private snackBar: MatSnackBar,
-    private dialog: MatDialog
+    private toast: ToastService,
   ) {
     // Recupera o usuário passado via state na navegação (fluxo de edição)
     const nav: Navigation | null = this.router.getCurrentNavigation();
@@ -116,6 +114,8 @@ export class FormularioUsuariosComponent implements OnInit {
       bloqueioTentativas: [false],
       bloqueioExpiracao: [false],
     });
+
+    this.configurarRegrasToggle();
   }
 
   ngOnInit(): void {
@@ -140,7 +140,7 @@ export class FormularioUsuariosComponent implements OnInit {
       },
       error: () => {
         this.roles = [];
-        this.snackBar.open('ERRO DE CHAMADA HTTP', 'Fechar', { duration: 5000 });
+        this.toast.erro('ERRO DE CHAMADA HTTP');
       },
     });
   }
@@ -163,24 +163,81 @@ export class FormularioUsuariosComponent implements OnInit {
       bloqueioAdm: u.bloqueado_admin === true || u.bloqueado_admin === 'true',
       bloqueioTentativas: u.bloqueado_tentativas === true || u.bloqueado_tentativas === 'true',
       bloqueioExpiracao: u.bloqueado_expiracao === true || u.bloqueado_expiracao === 'true',
-    });
+    }, { emitEvent: false });
 
     // Campos disabled precisam ser atualizados diretamente pelo AbstractControl
     const dataExpiracaoCtrl = this.form.get('dataExpiracao');
     if (dataExpiracaoCtrl) {
       const dataValor = u.dataExpiracaoSenha ? new Date(u.dataExpiracaoSenha) : null;
-      dataExpiracaoCtrl.setValue(dataValor);
+      dataExpiracaoCtrl.setValue(dataValor, { emitEvent: false });
     }
 
     const tentativasCtrl = this.form.get('tentativas');
     if (tentativasCtrl) {
-      tentativasCtrl.setValue(u.tentativas ?? 0);
+      tentativasCtrl.setValue(u.tentativas ?? 0, { emitEvent: false });
     }
+
+    // Aplica regras de disable/enable com base nos valores carregados do banco
+    this.aplicarRegrasToggleInicio();
   }
 
-  onSalvar(): void {
-    if (this.form.invalid) {
-      this.snackBar.open('Por favor, corrija os erros no formulário.', 'Fechar', { duration: 3000 });
+  // ── Regras de negócio dos toggles ─────────────────────────────────────────
+
+  /** Configura os toggles somente-leitura e as subscrições de exclusão mútua. */
+  private configurarRegrasToggle(): void {
+    // Bloqueio por Tentativas e por Expiração são sempre somente-leitura
+    this.form.get('bloqueioTentativas')?.disable({ emitEvent: false });
+    this.form.get('bloqueioExpiracao')?.disable({ emitEvent: false });
+
+    // Se bloqueioAdm for ativado → desabilita primeiroAcesso (e vice-versa)
+    // Se bloqueioAdm for ativado → desabilita TODOS os demais toggles
+    this.form.get('bloqueioAdm')?.valueChanges
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(ativado => {
+        const primeiroAcesso = this.form.get('primeiroAcesso');
+        if (ativado) {
+          primeiroAcesso?.disable({ emitEvent: false });
+        } else {
+          // Reabilita primeiroAcesso somente se ele não estiver bloqueando bloqueioAdm
+          primeiroAcesso?.enable({ emitEvent: false });
+        }
+      });
+
+    this.form.get('primeiroAcesso')?.valueChanges
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(ativado => {
+        const bloqueioAdm = this.form.get('bloqueioAdm');
+        if (ativado) {
+          bloqueioAdm?.disable({ emitEvent: false });
+        } else {
+          bloqueioAdm?.enable({ emitEvent: false });
+        }
+      });
+  }
+
+  /** Aplica as regras de disable/enable no carregamento inicial dos dados. */
+  private aplicarRegrasToggleInicio(): void {
+    const bloqueioAdmVal   = this.form.get('bloqueioAdm')?.value;
+    const primeiroAcessoVal = this.form.get('primeiroAcesso')?.value;
+
+    if (bloqueioAdmVal) {
+      // bloqueioAdm ON → desabilita primeiroAcesso
+      this.form.get('primeiroAcesso')?.disable({ emitEvent: false });
+    } else if (primeiroAcessoVal) {
+      // primeiroAcesso ON → desabilita bloqueioAdm
+      this.form.get('bloqueioAdm')?.disable({ emitEvent: false });
+    } else {
+      // Ambos OFF → ambos habilitados
+      this.form.get('bloqueioAdm')?.enable({ emitEvent: false });
+      this.form.get('primeiroAcesso')?.enable({ emitEvent: false });
+    }
+    // bloqueioTentativas e bloqueioExpiracao permanecem sempre desabilitados
+    this.form.get('bloqueioTentativas')?.disable({ emitEvent: false });
+    this.form.get('bloqueioExpiracao')?.disable({ emitEvent: false });
+  }
+
+  onSalvar(): void {    if (this.form.invalid) {
+      this.toast.aviso('Por favor, corrija os erros no formulário.');
       return;
     }
 
@@ -210,7 +267,7 @@ export class FormularioUsuariosComponent implements OnInit {
       },
       error: () => {
         this.salvando = false;
-        this.snackBar.open('ERRO DE CHAMADA HTTP', 'Fechar', { duration: 5000 });
+        this.toast.erro('ERRO DE CHAMADA HTTP');
       }
     });
   }
@@ -234,20 +291,14 @@ export class FormularioUsuariosComponent implements OnInit {
       },
       error: () => {
         this.salvando = false;
-        this.snackBar.open('ERRO DE CHAMADA HTTP', 'Fechar', { duration: 5000 });
+        this.toast.erro('ERRO DE CHAMADA HTTP');
       }
     });
   }
 
   private abrirDialogoSucesso(mensagem: string): void {
-    const dialogRef = this.dialog.open(DialogoInformacaoComponent, {
-      width: '360px',
-      data: { titulo: 'Aviso', mensagem }
-    });
-
-    dialogRef.afterClosed().subscribe(() => {
-      this.router.navigate(['/principal/lista-usuarios']);
-    });
+    this.toast.sucesso(mensagem);
+    this.router.navigate(['/principal/lista-usuarios']);
   }
 
   onCancelar(): void {
@@ -320,7 +371,7 @@ export class FormularioUsuariosComponent implements OnInit {
         URL.revokeObjectURL(url);
       },
       error: () => {
-        this.snackBar.open('ERRO AO GERAR PDF', 'Fechar', { duration: 5000 });
+        this.toast.erro('ERRO AO GERAR PDF');
       }
     });
   }

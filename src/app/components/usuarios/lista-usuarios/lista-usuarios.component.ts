@@ -5,12 +5,12 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatPaginator, MatPaginatorModule } from '@angular/material/paginator';
 import { MatTableDataSource } from '@angular/material/table';
-import { MatSnackBar } from '@angular/material/snack-bar';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { Router } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../../../environments/environment';
 import { DialogoConfirmacaoComponent } from '../../shared/dialogo-confirmacao/dialogo-confirmacao.component';
+import { ToastService } from '../../../services/toast.service';
 
 export interface Usuario {
   nome: string;
@@ -54,8 +54,8 @@ export class ListaUsuariosComponent implements AfterViewInit, OnInit {
   constructor(
     private router: Router,
     private http: HttpClient,
-    private snackBar: MatSnackBar,
     private dialog: MatDialog,
+    private toast: ToastService,
   ) {}
 
   ngOnInit(): void {
@@ -73,7 +73,7 @@ export class ListaUsuariosComponent implements AfterViewInit, OnInit {
       },
       error: () => {
         this.dataSource.data = [];
-        this.snackBar.open('ERRO DE CHAMADA HTTP', 'Fechar', { duration: 5000 });
+        this.toast.erro('ERRO DE CHAMADA HTTP');
       }
     });
   }
@@ -98,11 +98,11 @@ export class ListaUsuariosComponent implements AfterViewInit, OnInit {
   private excluirUsuario(usuario: Usuario): void {
     this.http.post(this.urlExcluirUsuario, { email: usuario.email }).subscribe({
       next: () => {
-        this.snackBar.open('Usuário excluído com sucesso.', 'Fechar', { duration: 3000 });
+        this.toast.sucesso('Usuário excluído com sucesso.');
         this.carregarUsuarios();
       },
       error: () => {
-        this.snackBar.open('ERRO AO EXCLUIR USUÁRIO.', 'Fechar', { duration: 5000 });
+        this.toast.erro('ERRO AO EXCLUIR USUÁRIO.');
       }
     });
   }
@@ -141,7 +141,7 @@ export class ListaUsuariosComponent implements AfterViewInit, OnInit {
         URL.revokeObjectURL(url);
       },
       error: () => {
-        this.snackBar.open('ERRO AO GERAR PDF', 'Fechar', { duration: 5000 });
+        this.toast.erro('ERRO AO GERAR PDF');
       }
     });
   }

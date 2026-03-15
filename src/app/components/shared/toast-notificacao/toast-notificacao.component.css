@@ -1,0 +1,35 @@
+.toast-wrapper {
+  display: flex;
+  align-items: center;
+  padding: 14px 8px 14px 16px;
+  gap: 12px;
+  min-width: 280px;
+}
+
+.toast-icon {
+  flex-shrink: 0;
+  font-size: 24px;
+  width: 24px;
+  height: 24px;
+  line-height: 24px;
+}
+
+.toast-mensagem {
+  flex: 1;
+  font-size: 14px;
+  font-weight: 500;
+  color: #212121;
+  line-height: 1.4;
+}
+
+.toast-fechar {
+  flex-shrink: 0;
+  color: #757575;
+}
+
+/* Cores do ícone por tipo — lidas via contexto do panel */
+:host-context(.toast-sucesso) .toast-icon { color: #2e7d32; }
+:host-context(.toast-erro)    .toast-icon { color: #c62828; }
+:host-context(.toast-aviso)   .toast-icon { color: #e65100; }
+:host-context(.toast-info)    .toast-icon { color: #1565c0; }
+

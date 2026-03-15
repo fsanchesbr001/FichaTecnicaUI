@@ -5,11 +5,11 @@ import {MatError, MatFormField, MatHint, MatInput, MatLabel, MatSuffix} from "@a
 import {NgOptimizedImage} from "@angular/common";
 import {FormControl, FormGroup, ReactiveFormsModule, Validators} from "@angular/forms";
 import {MatIcon} from '@angular/material/icon';
-import {MatSnackBar} from '@angular/material/snack-bar';
 import { NgxMaskDirective} from 'ngx-mask';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
 import {validateCPF} from '../../validators/cpf.validator';
+import { ToastService } from '../../services/toast.service';
 
 @Component({
   selector: 'app-recuperar-senha',
@@ -71,7 +71,7 @@ export class RecuperarSenhaComponent {
     ])
   });
 
-  constructor(private snackBar: MatSnackBar,
+  constructor(private toast: ToastService,
               private route: ActivatedRoute) {}
 
   validatePasswords(): boolean {
@@ -93,14 +93,10 @@ export class RecuperarSenhaComponent {
 
   onSubmit() {
     if (this.recuperaSenhaForm.valid) {
-      this.snackBar.open('Recuperação de senha realizado com sucesso!', 'Fechar', {
-        duration: 3000
-      });
+      this.toast.sucesso('Recuperação de senha realizado com sucesso!');
       // Aqui você implementaria a lógica real de login
     } else {
-      this.snackBar.open('Por favor, corrija os erros no formulário.', 'Fechar', {
-        duration: 3000
-      });
+      this.toast.aviso('Por favor, corrija os erros no formulário.');
     }
   }
 }

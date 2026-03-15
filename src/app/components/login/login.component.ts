@@ -3,15 +3,14 @@ import {MatCard, MatCardContent, MatCardHeader, MatCardTitle} from "@angular/mat
 import {FormControl, FormGroup, ReactiveFormsModule, Validators} from "@angular/forms";
 import {MatError, MatFormField, MatHint, MatInput, MatLabel, MatSuffix} from "@angular/material/input";
 import {MatIcon} from "@angular/material/icon";
-import {MatSnackBar} from "@angular/material/snack-bar";
 import {NgOptimizedImage} from "@angular/common";
 import {MatButton} from "@angular/material/button";
 import {RouterLink, Router} from "@angular/router";
 import {AuthService} from "../../services/auth.service";
 import {JwtService} from "../../services/jwt.service";
-import {PaginaErroService} from "../../services/pagina-erro.service";
 import {Usuario} from '../../model/usuario.model';
 import {HttpErrorResponse} from '@angular/common/http';
+import {ToastService} from '../../services/toast.service';
 @Component({
   selector: 'app-login',
   imports: [
@@ -54,11 +53,10 @@ export class LoginComponent {
 
 
   constructor(
-    private snackBar: MatSnackBar,
+    private toast: ToastService,
     private router: Router,
     private authService: AuthService,
     private jwtService: JwtService,
-    private paginaErroService: PaginaErroService
   ) {
     this.usuario = new Usuario();
   }
@@ -91,10 +89,9 @@ export class LoginComponent {
     return erro?.error?.jwt || erro?.error?.message || 'Erro ao realizar login. Verifique suas credenciais.';
   }
 
-  private redirecionarParaPaginaErro(errorMessage: string): void {
-    const mensagemLimpa = this.limparMensagemBloqueio(errorMessage);
-    this.paginaErroService.definirErro(mensagemLimpa, '/');
-    this.router.navigate(['/erro']);
+  private mostrarErroBloqueio(message: string): void {
+    const mensagemLimpa = this.limparMensagemBloqueio(message);
+    this.toast.erro(mensagemLimpa);
   }
 
   onSubmit() {
@@ -127,8 +124,8 @@ export class LoginComponent {
               console.log('É código de bloqueio?', this.isCodigoBloqueio(jwtMessage));
 
               if (jwtMessage && this.isCodigoBloqueio(jwtMessage)) {
-                console.log('✅ Redirecionando para página de erro (NEXT)');
-                this.redirecionarParaPaginaErro(jwtMessage);
+                console.log('✅ Exibindo toast de bloqueio (NEXT)');
+                this.mostrarErroBloqueio(jwtMessage);
                 return;
               }
 
@@ -136,9 +133,7 @@ export class LoginComponent {
               if (token.jwt) {
                 this.jwtService.setToken(token.jwt);
               }
-              this.snackBar.open('Login realizado com sucesso!', 'Fechar', {
-                duration: 3000
-              });
+              this.toast.sucesso('Login realizado com sucesso!');
               this.router.navigate(['/principal/lista-usuarios']);
             },
             error: (erro:HttpErrorResponse)=>{
@@ -152,14 +147,11 @@ export class LoginComponent {
               console.log('É código de bloqueio?', this.isCodigoBloqueio(errorMessage));
 
               if (this.isCodigoBloqueio(errorMessage)) {
-                console.log('✅ Redirecionando para página de erro (ERROR)');
-                this.redirecionarParaPaginaErro(errorMessage);
+                console.log('✅ Exibindo toast de bloqueio (ERROR)');
+                this.mostrarErroBloqueio(errorMessage);
               } else {
-                console.log('❌ Mostrando snackbar');
-                // Caso contrario, mostra o snackbar
-                this.snackBar.open(errorMessage, 'Fechar', {
-                  duration: 5000
-                });
+                console.log('❌ Mostrando toast de erro');
+                this.toast.erro(errorMessage);
               }
             }
           });
@@ -168,9 +160,7 @@ export class LoginComponent {
       }
     } else {
       console.warn('Formulário inválido');
-      this.snackBar.open('Por favor, corrija os erros no formulário.', 'Fechar', {
-        duration: 3000
-      });
+      this.toast.aviso('Por favor, corrija os erros no formulário.');
     }
   }
 }

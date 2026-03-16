@@ -77,10 +77,17 @@ export class FormularioUsuariosComponent implements OnInit {
   salvando = false;
   protected usuarioParaEditar: any = null;
   private readonly destroyRef = inject(DestroyRef);
+  private primeiroAcessoVeioDoDb = false;
+
+  /** Desabilita o Salvar apenas quando Primeiro Acesso veio true do banco de dados. */
+  get primeiroAcessoAtivo(): boolean {
+    return this.primeiroAcessoVeioDoDb;
+  }
 
   private readonly urlRoles            = `${environment.API}ficha-tecnica/usuarios/roles`;
   private readonly urlRegistrarUsuario = `${environment.API}ficha-tecnica/usuarios/registrar-usuario`;
   private readonly urlAtualizarUsuario = `${environment.API}ficha-tecnica/usuarios/atualizar-usuario`;
+  private readonly urlPrimeiroAcesso   = `${environment.API}ficha-tecnica/usuarios/primeiro-acesso`;
   private readonly urlGerarPdf         = `${environment.API}ficha-tecnica/relatorios/gerar-pdf`;
 
   constructor(
@@ -150,6 +157,9 @@ export class FormularioUsuariosComponent implements OnInit {
 
     const cpfSomenteDigitos = u.cpf ? u.cpf.replace(/\D/g, '') : '';
 
+    // Registra se Primeiro Acesso já veio true do banco (impede salvar nesse caso)
+    this.primeiroAcessoVeioDoDb = u.primeiro_acesso === true || u.primeiro_acesso === 'true';
+
     // Modo edição: email e CPF não podem ser alterados
     this.form.get('email')?.disable();
     this.form.get('cpf')?.disable();
@@ -189,8 +199,12 @@ export class FormularioUsuariosComponent implements OnInit {
     this.form.get('bloqueioTentativas')?.disable({ emitEvent: false });
     this.form.get('bloqueioExpiracao')?.disable({ emitEvent: false });
 
-    // Se bloqueioAdm for ativado → desabilita primeiroAcesso (e vice-versa)
-    // Se bloqueioAdm for ativado → desabilita TODOS os demais toggles
+    // Em modo inclusão todos os toggles ficam desabilitados
+    if (!this.usuarioParaEditar) {
+      this.form.get('primeiroAcesso')?.disable({ emitEvent: false });
+      this.form.get('bloqueioAdm')?.disable({ emitEvent: false });
+      return; // subscrições de exclusão mútua não são necessárias em modo inclusão
+    }
     this.form.get('bloqueioAdm')?.valueChanges
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe(ativado => {
@@ -208,7 +222,12 @@ export class FormularioUsuariosComponent implements OnInit {
       .subscribe(ativado => {
         const bloqueioAdm = this.form.get('bloqueioAdm');
         if (ativado) {
+          // Primeiro Acesso não pode ser desfeito: desabilita ele mesmo,
+          // bloqueioAdm e todos os demais campos editáveis
+          this.form.get('primeiroAcesso')?.disable({ emitEvent: false });
           bloqueioAdm?.disable({ emitEvent: false });
+          this.form.get('nome')?.disable({ emitEvent: false });
+          this.form.get('role')?.disable({ emitEvent: false });
         } else {
           bloqueioAdm?.enable({ emitEvent: false });
         }
@@ -217,15 +236,18 @@ export class FormularioUsuariosComponent implements OnInit {
 
   /** Aplica as regras de disable/enable no carregamento inicial dos dados. */
   private aplicarRegrasToggleInicio(): void {
-    const bloqueioAdmVal   = this.form.get('bloqueioAdm')?.value;
+    const bloqueioAdmVal    = this.form.get('bloqueioAdm')?.value;
     const primeiroAcessoVal = this.form.get('primeiroAcesso')?.value;
 
     if (bloqueioAdmVal) {
       // bloqueioAdm ON → desabilita primeiroAcesso
       this.form.get('primeiroAcesso')?.disable({ emitEvent: false });
     } else if (primeiroAcessoVal) {
-      // primeiroAcesso ON → desabilita bloqueioAdm
+      // primeiroAcesso ON → desabilita ele mesmo, bloqueioAdm e demais campos editáveis
+      this.form.get('primeiroAcesso')?.disable({ emitEvent: false });
       this.form.get('bloqueioAdm')?.disable({ emitEvent: false });
+      this.form.get('nome')?.disable({ emitEvent: false });
+      this.form.get('role')?.disable({ emitEvent: false });
     } else {
       // Ambos OFF → ambos habilitados
       this.form.get('bloqueioAdm')?.enable({ emitEvent: false });
@@ -274,15 +296,30 @@ export class FormularioUsuariosComponent implements OnInit {
 
   private atualizarUsuario(): void {
     const valores = this.form.getRawValue();
-    const email = this.usuarioParaEditar.email;
+    const email   = this.usuarioParaEditar.email;
 
+    // 02 — Primeiro Acesso selecionado: chama endpoint específico
+    if (valores.primeiroAcesso) {
+      this.http.post(`${this.urlPrimeiroAcesso}/${email}`, {}).subscribe({
+        next: () => {
+          this.abrirDialogoSucesso('Registro atualizado com sucesso.');
+        },
+        error: () => {
+          this.salvando = false;
+          this.toast.erro('ERRO DE CHAMADA HTTP');
+        }
+      });
+      return;
+    }
+
+    // 01 — Fluxo normal de atualização
     const payload = {
-      bloqueado_admin: valores.bloqueioAdm,
-      bloqueado_tentativas: valores.bloqueioTentativas,
-      bloqueado_expiracao: valores.bloqueioExpiracao,
-      primeiro_acesso: valores.primeiroAcesso,
-      nome: valores.nome,
-      role: valores.role,
+      bloqueado_admin:       valores.bloqueioAdm,
+      bloqueado_tentativas:  valores.bloqueioTentativas,
+      bloqueado_expiracao:   valores.bloqueioExpiracao,
+      primeiro_acesso:       valores.primeiroAcesso,
+      nome:                  valores.nome,
+      role:                  valores.role,
     };
 
     this.http.put(`${this.urlAtualizarUsuario}/${email}`, payload).subscribe({

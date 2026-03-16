@@ -84,3 +84,4 @@ For more information on using the Angular CLI, including detailed command refere
 - 1.0.21 - Submenu Sair funcionando e melhorias de layout.
 - 1.0.22 - Adicionado componente de Relatórios e finalizando Usuário.
 - 1.0.23 - Adicionado toast de sucesso e erro para as ações de usuário.
+- 1.0.24 - Melhorias de cadastro de Usuarios e Primeiro Acesso.

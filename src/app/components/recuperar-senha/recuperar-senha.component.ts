@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import {MatButton} from "@angular/material/button";
 import {MatCard, MatCardContent, MatCardHeader, MatCardTitle} from "@angular/material/card";
-import {MatError, MatFormField, MatHint, MatInput, MatLabel, MatSuffix} from "@angular/material/input";
+import {MatError, MatFormField, MatInput, MatLabel, MatSuffix} from "@angular/material/input";
 import {NgOptimizedImage} from "@angular/common";
 import {FormControl, FormGroup, ReactiveFormsModule, Validators} from "@angular/forms";
 import {MatIcon} from '@angular/material/icon';
@@ -34,7 +34,6 @@ import { HttpErrorResponse } from '@angular/common/http';
       MatSuffix,
       NgOptimizedImage,
       MatButton,
-      MatHint,
       NgxMaskDirective
     ],
   templateUrl: './recuperar-senha.component.html',
@@ -52,13 +51,13 @@ export class RecuperarSenhaComponent implements OnInit {
       Validators.required,
       Validators.minLength(8),
       Validators.maxLength(20),
-      Validators.pattern(/^(?=.*[A-Z])(?=.*[!@#$%^&*]).+$/)
+      Validators.pattern(/^(?=[a-zA-Z0-9])(?=.*[A-Z])(?=.*[a-z])(?=.*\d)(?=.*[!@#$%^&*()\-_+=\[\]{};:,.<>?\/])[a-zA-Z0-9!@#$%^&*()\-_+=\[\]{};:,.<>?\/]+$/)
     ]),
     retypePassword: new FormControl('', [
       Validators.required,
       Validators.minLength(8),
       Validators.maxLength(20),
-      Validators.pattern(/^(?=.*[A-Z])(?=.*[!@#$%^&*]).+$/)
+      Validators.pattern(/^(?=[a-zA-Z0-9])(?=.*[A-Z])(?=.*[a-z])(?=.*\d)(?=.*[!@#$%^&*()\-_+=\[\]{};:,.<>?\/])[a-zA-Z0-9!@#$%^&*()\-_+=\[\]{};:,.<>?\/]+$/)
     ]),
     cpf: new FormControl(this.cpf, [
       Validators.required,validateCPF,
@@ -76,6 +75,8 @@ export class RecuperarSenhaComponent implements OnInit {
 
   isSalvarDisabled: boolean = false;
 
+  readonly senhaErroPattern = 'Senha deve iniciar com letra ou número, conter maiúscula, minúscula, número e caractere especial (!@#$%^&*()-_+=[]{};:,.<>?/), sem espaços';
+
   constructor(private toast: ToastService,
               private route: ActivatedRoute,
               private router: Router,
@@ -85,7 +86,9 @@ export class RecuperarSenhaComponent implements OnInit {
   ngOnInit(): void {
     const emailParam = this.route.snapshot.queryParamMap.get('email');
     if (emailParam) {
-      this.recuperaSenhaForm.get('email')?.setValue(emailParam);
+      // Decodifica o email de Base64
+      const emailDecodificado = atob(emailParam);
+      this.recuperaSenhaForm.get('email')?.setValue(emailDecodificado);
       this.recuperaSenhaForm.get('email')?.disable();
     }
   }

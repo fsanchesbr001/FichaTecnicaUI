@@ -9,8 +9,9 @@ import { JwtService } from './jwt.service';
 export const authInterceptor: HttpInterceptorFn = (req, next) => {
   const jwtService = inject(JwtService);
 
-  // Não adiciona token na requisição de login
-  if (req.url.includes('/auth/login')) {
+  // Não adiciona token nas requisições públicas (login e início de recuperação de senha)
+  const publicUrls = ['/auth/login', '/ficha-tecnica/login-recuperacao-senha'];
+  if (publicUrls.some(url => req.url.includes(url))) {
     return next(req);
   }
 

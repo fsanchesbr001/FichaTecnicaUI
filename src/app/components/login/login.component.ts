@@ -1,7 +1,7 @@
 import {ChangeDetectionStrategy, Component} from '@angular/core';
 import {MatCard, MatCardContent, MatCardHeader, MatCardTitle} from "@angular/material/card";
 import {FormControl, FormGroup, ReactiveFormsModule, Validators} from "@angular/forms";
-import {MatError, MatFormField, MatHint, MatInput, MatLabel, MatSuffix} from "@angular/material/input";
+import {MatError, MatFormField, MatInput, MatLabel, MatSuffix} from "@angular/material/input";
 import {MatIcon} from "@angular/material/icon";
 import {NgOptimizedImage} from "@angular/common";
 import {MatButton} from "@angular/material/button";
@@ -29,7 +29,6 @@ import {ToastService} from '../../services/toast.service';
     MatSuffix,
     NgOptimizedImage,
     MatButton,
-    MatHint,
     RouterLink
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -38,6 +37,8 @@ import {ToastService} from '../../services/toast.service';
 })
 export class LoginComponent {
   usuario! :Usuario;
+
+  readonly senhaErroPattern = 'Senha deve iniciar com letra ou número, conter maiúscula, minúscula, número e caractere especial (!@#$%^&*()-_+=[]{};:,.<>?/), sem espaços';
   loginForm = new FormGroup({
     email: new FormControl('', [
       Validators.required,
@@ -47,7 +48,7 @@ export class LoginComponent {
       Validators.required,
       Validators.minLength(8),
       Validators.maxLength(20),
-      Validators.pattern(/^(?=.*[A-Z])(?=.*[!@#$%^&*]).+$/)
+      Validators.pattern(/^(?=[a-zA-Z0-9])(?=.*[A-Z])(?=.*[a-z])(?=.*\d)(?=.*[!@#$%^&*()\-_+=\[\]{};:,.<>?\/])[a-zA-Z0-9!@#$%^&*()\-_+=\[\]{};:,.<>?\/]+$/)
     ])
   });
 
@@ -74,6 +75,10 @@ export class LoginComponent {
   private isCodigoBloqueio(message: string): boolean {
     const normalizedMessage = message.trim().toUpperCase();
     return normalizedMessage.startsWith('BLQADM') || normalizedMessage.startsWith('BLQSNF');
+  }
+
+  private isPrimeiroAcesso(message: string): boolean {
+    return message.trim().toUpperCase().startsWith('BLQPAC');
   }
 
   private limparMensagemBloqueio(message: string): string {
@@ -123,6 +128,14 @@ export class LoginComponent {
               console.log('jwtMessage após trim:', jwtMessage);
               console.log('É código de bloqueio?', this.isCodigoBloqueio(jwtMessage));
 
+              if (jwtMessage && this.isPrimeiroAcesso(jwtMessage)) {
+                console.log('✅ Redirecionando para Primeiro Acesso (NEXT)');
+                this.router.navigate(['/solicitar-token'], {
+                  queryParams: { email: btoa(emailValue), primeiroAcesso: true }
+                });
+                return;
+              }
+
               if (jwtMessage && this.isCodigoBloqueio(jwtMessage)) {
                 console.log('✅ Exibindo toast de bloqueio (NEXT)');
                 this.mostrarErroBloqueio(jwtMessage);
@@ -145,6 +158,14 @@ export class LoginComponent {
               const errorMessage = this.extrairMensagemErro(erro);
               console.log('errorMessage extraída:', errorMessage);
               console.log('É código de bloqueio?', this.isCodigoBloqueio(errorMessage));
+
+              if (this.isPrimeiroAcesso(errorMessage)) {
+                console.log('✅ Redirecionando para Primeiro Acesso (ERROR)');
+                this.router.navigate(['/solicitar-token'], {
+                  queryParams: { email: btoa(emailValue), primeiroAcesso: true }
+                });
+                return;
+              }
 
               if (this.isCodigoBloqueio(errorMessage)) {
                 console.log('✅ Exibindo toast de bloqueio (ERROR)');

@@ -86,3 +86,4 @@ For more information on using the Angular CLI, including detailed command refere
 - 1.0.23 - Adicionado toast de sucesso e erro para as ações de usuário.
 - 1.0.24 - Melhorias de cadastro de Usuarios e Primeiro Acesso.
 - 1.0.25 - Adicionado fluxo completo de Usuario.
+- 1.0.26 - Corrigindo validações de senha e codificando email na URL.

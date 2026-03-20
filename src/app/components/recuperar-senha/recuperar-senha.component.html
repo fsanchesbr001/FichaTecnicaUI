@@ -50,9 +50,11 @@
           @if (password?.hasError('minlength')) {
             <mat-error>Senha deve ter no mínimo 8 caracteres</mat-error>
           }
+          @if (password?.hasError('maxlength')) {
+            <mat-error>Senha deve ter no máximo 20 caracteres</mat-error>
+          }
           @if (password?.hasError('pattern')) {
-            <mat-hint>Senha deve conter pelo menos 1 letra maúscula e
-              1 caractere especial.</mat-hint>
+            <mat-error>{{ senhaErroPattern }}</mat-error>
           }
 
         </mat-form-field>
@@ -68,12 +70,14 @@
           @if (retypePassword?.hasError('minlength')) {
             <mat-error>Senha deve ter no mínimo 8 caracteres</mat-error>
           }
+          @if (retypePassword?.hasError('maxlength')) {
+            <mat-error>Senha deve ter no máximo 20 caracteres</mat-error>
+          }
           @if (retypePassword?.hasError('passwordsMismatch')) {
             <mat-error>As senhas não coincidem</mat-error>
           }
           @if (retypePassword?.hasError('pattern')) {
-            <mat-hint>Senha deve conter pelo menos 1 letra maúscula e
-              1 caractere especial.</mat-hint>
+            <mat-error>{{ senhaErroPattern }}</mat-error>
           }
         </mat-form-field>
 

@@ -8,59 +8,66 @@
         <div class="linha-campos">
           <mat-form-field class="full-width" appearance="fill">
             <mat-label>De</mat-label>
-            <mat-select formControlName="comboDe" required>
-              @for (de of comboDe; track de) {
-                <mat-option [value]="de">{{ de }}</mat-option>
+            <mat-select formControlName="unidadeDe" required>
+              @for (u of unidades; track u.codigo) {
+                <mat-option [value]="u.codigo">{{ u.nome }}</mat-option>
               }
             </mat-select>
             <mat-icon matSuffix>balance</mat-icon>
-            @if (form.get('comboDe')?.hasError('required')) {
-              <mat-error>Unidade é obrigatória</mat-error>
+            @if (form.get('unidadeDe')?.hasError('required')) {
+              <mat-error>Unidade de origem é obrigatória</mat-error>
             }
           </mat-form-field>
+
           <mat-form-field class="full-width" appearance="fill">
             <mat-label>Para</mat-label>
-            <mat-select formControlName="comboPara" required>
-              @for (para of comboPara; track para) {
-                <mat-option [value]="para">{{ para }}</mat-option>
+            <mat-select formControlName="unidadePara" required>
+              @for (u of unidades; track u.codigo) {
+                <mat-option [value]="u.codigo">{{ u.nome }}</mat-option>
               }
             </mat-select>
             <mat-icon matSuffix>balance</mat-icon>
-            @if (form.get('comboPara')?.hasError('required')) {
-              <mat-error>Unidade é obrigatória</mat-error>
+            @if (form.get('unidadePara')?.hasError('required')) {
+              <mat-error>Unidade de destino é obrigatória</mat-error>
             }
           </mat-form-field>
         </div>
+
         <div class="linha-campos">
           <mat-form-field class="full-width" appearance="fill">
             <mat-label>Operação</mat-label>
-            <mat-select formControlName="comboOperacao" required>
-              @for (op of comboOperacao; track op) {
-                <mat-option [value]="op">{{ op }}</mat-option>
+            <mat-select formControlName="operacao" required>
+              @for (op of operacoes; track op.value) {
+                <mat-option [value]="op.value">{{ op.label }}</mat-option>
               }
             </mat-select>
             <mat-icon matSuffix>calculate</mat-icon>
-            @if (form.get('comboOperacao')?.hasError('required')) {
+            @if (form.get('operacao')?.hasError('required')) {
               <mat-error>Operação é obrigatória</mat-error>
             }
           </mat-form-field>
+
           <mat-form-field class="full-width" appearance="fill">
             <mat-label>Fator</mat-label>
-            <input matInput type="number" placeholder="Fator de Conversão" formControlName="fator" required>
+            <input matInput type="number" placeholder="Fator de Conversão" formControlName="valor" required>
             <mat-icon matSuffix>calculate</mat-icon>
-            @if (form.get('fator')?.hasError('required')) {
+            @if (form.get('valor')?.hasError('required')) {
               <mat-error>Fator é obrigatório</mat-error>
+            }
+            @else if (form.get('valor')?.hasError('min')) {
+              <mat-error>Fator deve ser maior que zero</mat-error>
             }
           </mat-form-field>
         </div>
+
         <div class="botoes">
-          <button mat-raised-button color="primary" (click)="onSalvar()" [disabled]="form.invalid">
+          <button mat-raised-button color="primary" (click)="onSalvar()" [disabled]="form.invalid || salvando">
             <mat-icon>save</mat-icon> Salvar
           </button>
-          <button mat-raised-button color="warn" (click)="onCancelar()">
+          <button mat-raised-button color="warn" (click)="onCancelar()" [disabled]="salvando">
             <mat-icon>cancel</mat-icon> Cancelar
           </button>
-          <button mat-raised-button color="accent" (click)="onImprimir()">
+          <button mat-raised-button color="accent" (click)="onImprimir()" [disabled]="salvando || !conversaoParaEditar">
             <mat-icon>print</mat-icon> Imprimir
           </button>
         </div>

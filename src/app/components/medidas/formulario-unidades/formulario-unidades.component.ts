@@ -1,13 +1,17 @@
-import {Component, Input} from '@angular/core';
-import {FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators} from '@angular/forms';
-import {MatButton} from '@angular/material/button';
-import {MatCard, MatCardContent, MatCardHeader, MatCardTitle} from '@angular/material/card';
-import {MatError, MatFormField, MatInput, MatLabel, MatSuffix} from '@angular/material/input';
-import {Router} from '@angular/router';
-import {MatIcon} from '@angular/material/icon';
+import { Component, OnInit } from '@angular/core';
+import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { MatButton } from '@angular/material/button';
+import { MatCard, MatCardContent, MatCardHeader, MatCardTitle } from '@angular/material/card';
+import { MatError, MatFormField, MatInput, MatLabel, MatSuffix } from '@angular/material/input';
+import { Router, Navigation } from '@angular/router';
+import { MatIcon } from '@angular/material/icon';
+import { HttpClient } from '@angular/common/http';
+import { environment } from '../../../../../environments/environment';
+import { ToastService } from '../../../services/toast.service';
 
 @Component({
   selector: 'app-formulario-unidades',
+  standalone: true,
   imports: [
     FormsModule,
     MatCard,
@@ -26,34 +30,117 @@ import {MatIcon} from '@angular/material/icon';
   templateUrl: './formulario-unidades.component.html',
   styleUrl: './formulario-unidades.component.css'
 })
-export class FormularioUnidadesComponent {
-  @Input() medida: any;
+export class FormularioUnidadesComponent implements OnInit {
   form!: FormGroup;
+  salvando = false;
+  protected medidaParaEditar: any = null;
 
-  constructor(private fb: FormBuilder, private router: Router) {
-    // Inicializa o formulário com valores padrão se necessário
+  private readonly urlUnidades = `${environment.API}ficha-tecnica/unidades-medida`;
+  private readonly urlGerarPdf = `${environment.API}ficha-tecnica/unidades-medida/gerar-pdf-detalhe`;
+
+  constructor(
+    private fb: FormBuilder,
+    private router: Router,
+    private http: HttpClient,
+    private toast: ToastService,
+  ) {
+    const nav: Navigation | null = this.router.getCurrentNavigation();
+    this.medidaParaEditar = nav?.extras?.state?.['medida'] ?? null;
+
     this.form = this.fb.group({
       nome: ['', Validators.required],
       sigla: ['', [Validators.required]]
     });
   }
 
-  onSalvar() {
-    if (this.form.valid) {
-      // Aqui você pode enviar os dados do formulário para o backend ou realizar outras ações
-      console.log('Formulário enviado com sucesso!', this.form.value);
-    } else {
-      console.log('Formulário inválido');
+  ngOnInit(): void {
+    if (this.medidaParaEditar) {
+      this.form.patchValue({
+        nome: this.medidaParaEditar.nome ?? '',
+        sigla: this.medidaParaEditar.sigla ?? '',
+      });
     }
   }
 
-  onCancelar() {
-    this.router.navigate(['/principal/lista-medidas']);
-    console.log('Ação cancelada');
+  onSalvar(): void {
+    if (this.form.invalid) {
+      this.toast.aviso('Por favor, corrija os erros no formulário.');
+      return;
+    }
+
+    this.salvando = true;
+
+    if (this.medidaParaEditar) {
+      this.atualizarUnidade();
+    } else {
+      this.registrarUnidade();
+    }
   }
 
-  onImprimir() {
-    // Aqui você pode implementar a lógica para imprimir o formulário ou os dados do usuário
-    console.log('Imprimindo formulário...');
+  private extrairMensagemErro(err: any, fallback = 'ERRO DE CHAMADA HTTP'): string {
+    const body = err?.error;
+    if (typeof body === 'string' && body.trim()) return body.trim();
+    if (body?.message && typeof body.message === 'string') return body.message;
+    if (body?.erro   && typeof body.erro   === 'string') return body.erro;
+    return fallback;
+  }
+
+  private registrarUnidade(): void {
+    const payload = this.form.getRawValue();
+    this.http.post(this.urlUnidades, payload).subscribe({
+      next: () => {
+        this.toast.sucesso('Unidade de medida registrada com sucesso.');
+        this.router.navigate(['/principal/lista-medidas']);
+      },
+      error: (err) => {
+        this.salvando = false;
+        this.toast.erro(this.extrairMensagemErro(err));
+      }
+    });
+  }
+
+  private atualizarUnidade(): void {
+    const payload = this.form.getRawValue();
+    this.http.put(`${this.urlUnidades}/${this.medidaParaEditar.codigo}`, payload).subscribe({
+      next: () => {
+        this.toast.sucesso('Unidade de medida atualizada com sucesso.');
+        this.router.navigate(['/principal/lista-medidas']);
+      },
+      error: (err) => {
+        this.salvando = false;
+        this.toast.erro(this.extrairMensagemErro(err));
+      }
+    });
+  }
+
+  onCancelar(): void {
+    this.router.navigate(['/principal/lista-medidas']);
+  }
+
+  onImprimir(): void {
+    if (!this.medidaParaEditar) return;
+
+    this.http.get(`${this.urlGerarPdf}/${this.medidaParaEditar.codigo}`, { responseType: 'blob' }).subscribe({
+      next: (blob) => {
+        const now  = new Date();
+        const aaaa = now.getFullYear().toString();
+        const mm   = (now.getMonth() + 1).toString().padStart(2, '0');
+        const dd   = now.getDate().toString().padStart(2, '0');
+        const hh   = now.getHours().toString().padStart(2, '0');
+        const min  = now.getMinutes().toString().padStart(2, '0');
+        const ss   = now.getSeconds().toString().padStart(2, '0');
+        const filename = `detalhe-medida-${aaaa}${mm}${dd}_${hh}${min}${ss}.pdf`;
+
+        const url = URL.createObjectURL(blob);
+        const anchor = document.createElement('a');
+        anchor.href = url;
+        anchor.download = filename;
+        anchor.click();
+        URL.revokeObjectURL(url);
+      },
+      error: () => {
+        this.toast.erro('ERRO AO GERAR PDF');
+      }
+    });
   }
 }

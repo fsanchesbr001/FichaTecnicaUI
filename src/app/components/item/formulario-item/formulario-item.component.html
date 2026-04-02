@@ -1,1 +1,66 @@
-<p>formulario-item works!</p>
+<div>
+  <mat-card class="item-card">
+    <mat-card-header class="item-header">
+      <mat-card-title>Cadastro de Item</mat-card-title>
+    </mat-card-header>
+    <mat-card-content>
+      <form [formGroup]="form" autocomplete="off">
+        <div class="linha-campos">
+          <mat-form-field class="full-width" appearance="fill">
+            <mat-label>Nome</mat-label>
+            <input matInput type="text" placeholder="Nome do item" formControlName="nome" required>
+            <mat-icon matSuffix>label</mat-icon>
+            @if (form.get('nome')?.hasError('required')) {
+              <mat-error>Nome é obrigatório</mat-error>
+            }
+            @else if (form.get('nome')?.hasError('minlength')) {
+              <mat-error>Nome deve ter pelo menos 2 caracteres</mat-error>
+            }
+            @else if (form.get('nome')?.hasError('maxlength')) {
+              <mat-error>Nome deve ter no máximo 100 caracteres</mat-error>
+            }
+          </mat-form-field>
+        </div>
+
+        <div class="linha-campos">
+          <mat-form-field class="full-width" appearance="fill">
+            <mat-label>Unidade de Medida</mat-label>
+            <mat-select formControlName="unidade" required>
+              @for (u of unidades; track u.codigo) {
+                <mat-option [value]="u.codigo">{{ u.nome }}</mat-option>
+              }
+            </mat-select>
+            <mat-icon matSuffix>balance</mat-icon>
+            @if (form.get('unidade')?.hasError('required')) {
+              <mat-error>Unidade de medida é obrigatória</mat-error>
+            }
+          </mat-form-field>
+
+          <mat-form-field class="full-width" appearance="fill">
+            <mat-label>Valor</mat-label>
+            <input matInput type="number" placeholder="Valor do item" formControlName="valor" required>
+            <mat-icon matSuffix>attach_money</mat-icon>
+            @if (form.get('valor')?.hasError('required')) {
+              <mat-error>Valor é obrigatório</mat-error>
+            }
+            @else if (form.get('valor')?.hasError('min')) {
+              <mat-error>Valor deve ser maior que zero</mat-error>
+            }
+          </mat-form-field>
+        </div>
+
+        <div class="botoes">
+          <button mat-raised-button color="primary" (click)="onSalvar()" [disabled]="form.invalid || salvando">
+            <mat-icon>save</mat-icon> Salvar
+          </button>
+          <button mat-raised-button color="warn" (click)="onCancelar()" [disabled]="salvando">
+            <mat-icon>cancel</mat-icon> Cancelar
+          </button>
+          <button mat-raised-button color="accent" (click)="onImprimir()" [disabled]="salvando || !itemParaEditar">
+            <mat-icon>print</mat-icon> Imprimir
+          </button>
+        </div>
+      </form>
+    </mat-card-content>
+  </mat-card>
+</div>

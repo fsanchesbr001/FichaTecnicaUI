@@ -92,12 +92,23 @@ export class FormularioItemComponent implements OnInit {
   }
 
   private preencherFormulario(item: any): void {
-    const unidadeId = this.unidades.find(u => u.nome === item.unidade || u.codigo === item.unidade)?.codigo ?? null;
+    const unidadeId = item.unidadeMedida?.codigo
+      ?? this.unidades.find(u => u.nome === item.unidade || u.codigo === item.unidade)?.codigo
+      ?? null;
+
+    // valor vem como string formatada "R$ 6,50" — extrai o número puro
+    let valorNumerico: number | string = item.valor ?? '';
+    if (typeof valorNumerico === 'string') {
+      valorNumerico = parseFloat(
+        valorNumerico.replace(/[R$\s.]/g, '').replace(',', '.')
+      );
+      if (isNaN(valorNumerico as number)) valorNumerico = '';
+    }
 
     this.form.patchValue({
       nome:    item.nome    ?? '',
       unidade: unidadeId,
-      valor:   item.valor   ?? '',
+      valor:   valorNumerico,
     });
   }
 
@@ -123,7 +134,8 @@ export class FormularioItemComponent implements OnInit {
   }
 
   private registrarItem(): void {
-    const payload = this.form.getRawValue();
+    const raw = this.form.getRawValue();
+    const payload = { nome: raw.nome, unidadeMedida: { codigo: raw.unidade }, valor: raw.valor };
     this.http.post(this.urlItens, payload).subscribe({
       next: () => {
         this.toast.sucesso('Item registrado com sucesso.');
@@ -137,7 +149,8 @@ export class FormularioItemComponent implements OnInit {
   }
 
   private atualizarItem(): void {
-    const payload = this.form.getRawValue();
+    const raw = this.form.getRawValue();
+    const payload = { nome: raw.nome, unidadeMedida: { codigo: raw.unidade }, valor: raw.valor };
     this.http.put(`${this.urlItens}/${this.itemParaEditar.codigo}`, payload).subscribe({
       next: () => {
         this.toast.sucesso('Item atualizado com sucesso.');

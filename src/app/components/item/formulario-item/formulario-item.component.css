@@ -52,6 +52,13 @@ mat-card-content {
   width: 100%;
 }
 
+.grafico-wrapper {
+  width: 100%;
+  margin: 8px 0 4px 0;
+  border-top: 1px solid #e0e0e0;
+  padding-top: 8px;
+}
+
 .botoes {
   display: flex;
   gap: 12px;

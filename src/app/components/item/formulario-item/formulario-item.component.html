@@ -1,7 +1,7 @@
 <div>
   <mat-card class="item-card">
     <mat-card-header class="item-header">
-      <mat-card-title>Cadastro de Item</mat-card-title>
+      <mat-card-title>{{ itemParaEditar ? 'Editar Item' : 'Cadastro de Item' }}</mat-card-title>
     </mat-card-header>
     <mat-card-content>
       <form [formGroup]="form" autocomplete="off">
@@ -48,6 +48,13 @@
             }
           </mat-form-field>
         </div>
+
+        <!-- Gráfico de variação de preço — somente na edição -->
+        @if (itemParaEditar) {
+          <div class="grafico-wrapper">
+            <app-grafico-precos-item [itemCodigo]="itemParaEditar.codigo"></app-grafico-precos-item>
+          </div>
+        }
 
         <div class="botoes">
           <button mat-raised-button color="primary" (click)="onSalvar()" [disabled]="form.invalid || salvando">

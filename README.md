@@ -89,3 +89,4 @@ For more information on using the Angular CLI, including detailed command refere
 - 1.0.26 - Corrigindo validações de senha e codificando email na URL.
 - 1.0.27 - Unidade de Medida e Conversao funcionando.
 - 1.0.28 - Melhorias de layout e usabilidade no componente de Itens.
+- 1.0.29 - Adicionado fluxo completo de HistoricoItens com gráfico.

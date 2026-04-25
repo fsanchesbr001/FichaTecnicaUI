@@ -55,6 +55,7 @@ export class FormularioItemComponent implements OnInit {
 
   private readonly urlItens    = `${environment.API}ficha-tecnica/itens`;
   private readonly urlUnidades = `${environment.API}ficha-tecnica/unidades-medida`;
+  private readonly urlGerarPdf = `${environment.API}ficha-tecnica/itens/gerar-pdf-detalhe`;
 
   constructor(
     private fb: FormBuilder,
@@ -170,83 +171,24 @@ export class FormularioItemComponent implements OnInit {
     this.router.navigate(['/principal/lista-item']);
   }
 
-  async onImprimir(): Promise<void> {
+  onImprimir(): void {
     if (!this.itemParaEditar) return;
 
-    try {
-      // importação dinâmica para não aumentar o bundle principal
-      const [{ default: jsPDF }, { default: html2canvas }] = await Promise.all([
-        import('jspdf'),
-        import('html2canvas'),
-      ]);
+    this.http.get(`${this.urlGerarPdf}/${this.itemParaEditar.codigo}`, { responseType: 'blob' }).subscribe({
+      next: (blob) => {
+        const now    = new Date();
+        const stamp  = `${now.getFullYear()}${String(now.getMonth()+1).padStart(2,'0')}${String(now.getDate()).padStart(2,'0')}_`
+                     + `${String(now.getHours()).padStart(2,'0')}${String(now.getMinutes()).padStart(2,'0')}${String(now.getSeconds()).padStart(2,'0')}`;
+        const filename = `detalhe-item-${stamp}.pdf`;
 
-      const now   = new Date();
-      const stamp = `${now.getFullYear()}${String(now.getMonth()+1).padStart(2,'0')}${String(now.getDate()).padStart(2,'0')}_`
-                  + `${String(now.getHours()).padStart(2,'0')}${String(now.getMinutes()).padStart(2,'0')}${String(now.getSeconds()).padStart(2,'0')}`;
-      const filename = `detalhe-item-${stamp}.pdf`;
-
-      const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
-      const pageW = pdf.internal.pageSize.getWidth();
-      const pageH = pdf.internal.pageSize.getHeight();
-      const margin = 12;
-      let yPos = margin;
-
-      // ── Título ──────────────────────────────────────────────────────────────
-      pdf.setFontSize(14);
-      pdf.setFont('helvetica', 'bold');
-      pdf.text('Detalhe do Item', pageW / 2, yPos, { align: 'center' });
-      yPos += 8;
-
-      // ── Dados do formulário ──────────────────────────────────────────────────
-      pdf.setFontSize(11);
-      pdf.setFont('helvetica', 'normal');
-
-      const unidadeNome = this.unidades.find(u => u.codigo === this.form.get('unidade')?.value)?.nome ?? '';
-      const linhas: [string, string][] = [
-        ['Nome',             this.form.get('nome')?.value  ?? ''],
-        ['Unidade de Medida', unidadeNome],
-        ['Valor',            String(this.form.get('valor')?.value ?? '')],
-      ];
-
-      linhas.forEach(([label, valor]) => {
-        pdf.setFont('helvetica', 'bold');
-        pdf.text(`${label}: `, margin, yPos);
-        const labelW = pdf.getTextWidth(`${label}: `);
-        pdf.setFont('helvetica', 'normal');
-        pdf.text(valor, margin + labelW, yPos);
-        yPos += 7;
-      });
-
-      // ── Gráfico ──────────────────────────────────────────────────────────────
-      const chartImg = this.graficoCmp?.getChartImageBase64();
-      if (chartImg) {
-        yPos += 4;
-        pdf.setFont('helvetica', 'bold');
-        pdf.setFontSize(12);
-        pdf.text('Variação de Preço', pageW / 2, yPos, { align: 'center' });
-        yPos += 6;
-
-        const imgW  = pageW - margin * 2;
-        const imgH  = imgW * 0.45; // proporção landscape
-        if (yPos + imgH > pageH - margin) {
-          pdf.addPage();
-          yPos = margin;
-        }
-        pdf.addImage(chartImg, 'PNG', margin, yPos, imgW, imgH);
-        yPos += imgH + 4;
-      }
-
-      // ── Rodapé ────────────────────────────────────────────────────────────────
-      pdf.setFontSize(8);
-      pdf.setFont('helvetica', 'italic');
-      pdf.setTextColor(150);
-      pdf.text(`Gerado em ${now.toLocaleDateString('pt-BR')} ${now.toLocaleTimeString('pt-BR')}`,
-        pageW / 2, pageH - 6, { align: 'center' });
-
-      pdf.save(filename);
-
-    } catch {
-      this.toast.erro('ERRO AO GERAR PDF');
-    }
+        const url    = URL.createObjectURL(blob);
+        const anchor = document.createElement('a');
+        anchor.href     = url;
+        anchor.download = filename;
+        anchor.click();
+        URL.revokeObjectURL(url);
+      },
+      error: () => this.toast.erro('ERRO AO GERAR PDF')
+    });
   }
 }

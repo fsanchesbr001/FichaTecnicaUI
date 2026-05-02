@@ -91,3 +91,4 @@ For more information on using the Angular CLI, including detailed command refere
 - 1.0.28 - Melhorias de layout e usabilidade no componente de Itens.
 - 1.0.29 - Adicionado fluxo completo de HistoricoItens com gráfico.
 - 1.0.30 - Melhorias no layout do gráfico e geração de PDF de detalhes de Itens no servidor.
+- 1.0.31 - Adicionado Produto e Itens de Produto.

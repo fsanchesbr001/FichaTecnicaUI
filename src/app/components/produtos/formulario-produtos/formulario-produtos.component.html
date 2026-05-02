@@ -1,0 +1,104 @@
+<div>
+  <mat-card class="produto-card">
+    <mat-card-header class="produto-header">
+      <mat-card-title>{{ produtoParaEditar ? 'Editar Produto' : 'Cadastro de Produto' }}</mat-card-title>
+    </mat-card-header>
+    <mat-card-content>
+      <form [formGroup]="form" autocomplete="off">
+
+        <!-- Nome -->
+        <div class="linha-campos">
+          <mat-form-field class="full-width" appearance="fill">
+            <mat-label>Nome</mat-label>
+            <input matInput type="text" placeholder="Nome do produto" formControlName="nome"
+                   maxlength="255" size="50" required>
+            <mat-icon matSuffix>label</mat-icon>
+            @if (form.get('nome')?.hasError('required')) {
+              <mat-error>Nome é obrigatório</mat-error>
+            } @else if (form.get('nome')?.hasError('minlength')) {
+              <mat-error>Nome deve ter pelo menos 2 caracteres</mat-error>
+            } @else if (form.get('nome')?.hasError('maxlength')) {
+              <mat-error>Nome deve ter no máximo 255 caracteres</mat-error>
+            }
+          </mat-form-field>
+        </div>
+
+        <!-- Descrição -->
+        <div class="linha-campos">
+          <mat-form-field class="full-width" appearance="fill">
+            <mat-label>Descrição</mat-label>
+            <input matInput type="text" placeholder="Descrição do produto" formControlName="descricao"
+                   maxlength="255" size="50">
+            <mat-icon matSuffix>description</mat-icon>
+            @if (form.get('descricao')?.hasError('maxlength')) {
+              <mat-error>Descrição deve ter no máximo 255 caracteres</mat-error>
+            }
+          </mat-form-field>
+        </div>
+
+        <!-- Imagem -->
+        <div class="linha-campos">
+          <mat-form-field class="full-width" appearance="fill">
+            <mat-label>Imagem</mat-label>
+            <input matInput type="text" placeholder="Nome do arquivo de imagem" formControlName="imagem"
+                   maxlength="255" size="50">
+            <mat-icon matSuffix>image</mat-icon>
+            @if (form.get('imagem')?.hasError('maxlength')) {
+              <mat-error>Imagem deve ter no máximo 255 caracteres</mat-error>
+            }
+          </mat-form-field>
+        </div>
+
+        <!-- Valores -->
+        <div class="linha-campos">
+          <mat-form-field class="half-width" appearance="fill">
+            <mat-label>Valor de Venda</mat-label>
+            <span matPrefix>R$&nbsp;</span>
+            <input matInput formControlName="valorVenda"
+                   mask="separator.2" thousandSeparator="." decimalMarker=","
+                   placeholder="0,00" required
+                   (blur)="normalizarMoeda('valorVenda')">
+            <mat-icon matSuffix>attach_money</mat-icon>
+            @if (form.get('valorVenda')?.hasError('required')) {
+              <mat-error>Valor de venda é obrigatório</mat-error>
+            }
+          </mat-form-field>
+
+          <mat-form-field class="half-width" appearance="fill">
+            <mat-label>Valor de Itens</mat-label>
+            <span matPrefix>R$&nbsp;</span>
+            <input matInput formControlName="valorItens"
+                   mask="separator.2" thousandSeparator="." decimalMarker=","
+                   placeholder="0,00">
+            <mat-icon matSuffix>receipt_long</mat-icon>
+          </mat-form-field>
+        </div>
+
+        <!-- Lista de Itens do Produto — somente na edição -->
+        @if (produtoParaEditar) {
+          <app-lista-itens-produto
+            [codigoProduto]="produtoParaEditar.codigo"
+            [nomeProduto]="produtoParaEditar.nome">
+          </app-lista-itens-produto>
+        }
+
+        <!-- Botões -->
+        <div class="botoes">
+          <button mat-raised-button color="primary" (click)="onSalvar()"
+                  [disabled]="form.invalid || salvando">
+            <mat-icon>save</mat-icon> Salvar
+          </button>
+          <button mat-raised-button color="warn" (click)="onCancelar()" [disabled]="salvando">
+            <mat-icon>cancel</mat-icon> Cancelar
+          </button>
+          <button mat-raised-button color="accent" (click)="onImprimir()"
+                  [disabled]="salvando || !produtoParaEditar">
+            <mat-icon>print</mat-icon> Imprimir
+          </button>
+        </div>
+
+      </form>
+    </mat-card-content>
+  </mat-card>
+</div>
+

@@ -12,6 +12,8 @@ import {ListaItemComponent} from './components/item/lista-item/lista-item.compon
 import {FormularioItemComponent} from './components/item/formulario-item/formulario-item.component';
 import {ListaHistoricoItemComponent} from './components/item/lista-historico-item/lista-historico-item.component';
 import {PaginaErroComponent} from './components/pagina-erro/pagina-erro.component';
+import {ListaProdutosComponent} from './components/produtos/lista-produtos/lista-produtos.component';
+import {FormularioProdutosComponent} from './components/produtos/formulario-produtos/formulario-produtos.component';
 
 export const routes: Routes = [
   {
@@ -46,6 +48,8 @@ export const routes: Routes = [
       { path: 'lista-item', component: ListaItemComponent },
       { path: 'formulario-item',component: FormularioItemComponent},
       { path: 'lista-historico-item', component: ListaHistoricoItemComponent },
+      { path: 'lista-produtos', component: ListaProdutosComponent },
+      { path: 'formulario-produto', component: FormularioProdutosComponent },
     ]
   }
 ];

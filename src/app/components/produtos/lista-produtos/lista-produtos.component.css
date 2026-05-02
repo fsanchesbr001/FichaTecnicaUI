@@ -1,0 +1,63 @@
+.lista-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+
+.lista-table-container {
+  width: 100%;
+  overflow-x: auto;
+}
+
+table {
+  width: 100%;
+  min-width: 500px;
+}
+
+.col-nome {
+  width: 55%;
+  min-width: 120px;
+}
+
+.col-preco {
+  width: 25%;
+  min-width: 100px;
+}
+
+.col-acoes {
+  width: 20%;
+  min-width: 100px;
+}
+
+.col-nome, .col-preco, .col-acoes {
+  width: auto;
+  min-width: 80px;
+}
+
+.lista-titulo {
+  text-align: center;
+  margin-bottom: 16px;
+}
+
+:host {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: center;
+  height: 100%;
+  width: 100%;
+  margin: 0;
+  padding: 16px 10px 80px 16px;
+  box-sizing: border-box;
+  overflow-y: auto;
+}
+
+@media (max-width: 600px) {
+  table {
+    min-width: 0;
+    font-size: 13px;
+  }
+}
+

@@ -80,6 +80,14 @@ export class MenuPrincipalComponent implements OnInit {
       ]
     },
     {
+      label: 'Produtos',
+      isOpen: false,
+      submenus: [
+        { label: 'Gerenciar Produtos',
+          routePath: '/principal/lista-produtos' }
+      ]
+    },
+    {
       label: 'Usuários',
       isOpen: false,
       submenus: [

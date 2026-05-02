@@ -1,0 +1,82 @@
+<h2 mat-dialog-title>Adicionar Item ao Produto</h2>
+
+<mat-dialog-content>
+  <form [formGroup]="form" autocomplete="off">
+
+    <!-- Produto (desabilitado) -->
+    <div class="linha-campos">
+      <mat-form-field class="full-width" appearance="fill">
+        <mat-label>Produto</mat-label>
+        <input matInput formControlName="produto">
+        <mat-icon matSuffix>inventory_2</mat-icon>
+      </mat-form-field>
+    </div>
+
+    <!-- Item -->
+    <div class="linha-campos">
+      <mat-form-field class="full-width" appearance="fill">
+        <mat-label>Item</mat-label>
+        <mat-select formControlName="item" required>
+          @for (i of itensEstoque; track i.codigo) {
+            <mat-option [value]="i.codigo">{{ i.nome }}</mat-option>
+          }
+        </mat-select>
+        <mat-icon matSuffix>label</mat-icon>
+        @if (form.get('item')?.touched && form.get('item')?.hasError('required')) {
+          <mat-error>Item é obrigatório</mat-error>
+        }
+      </mat-form-field>
+    </div>
+
+    <!-- Quantidade e Medida -->
+    <div class="linha-campos">
+      <mat-form-field class="half-width" appearance="fill">
+        <mat-label>Quantidade</mat-label>
+        <input matInput formControlName="quantidade"
+               mask="separator.3" thousandSeparator="." decimalMarker=","
+               placeholder="0" required>
+        <mat-icon matSuffix>numbers</mat-icon>
+        @if (form.get('quantidade')?.touched && form.get('quantidade')?.hasError('required')) {
+          <mat-error>Quantidade é obrigatória</mat-error>
+        }
+      </mat-form-field>
+
+      <mat-form-field class="half-width" appearance="fill">
+        <mat-label>Medida</mat-label>
+        <mat-select formControlName="medida" required>
+          @for (u of unidades; track u.codigo) {
+            <mat-option [value]="u.codigo">{{ u.nome }}</mat-option>
+          }
+        </mat-select>
+        <mat-icon matSuffix>straighten</mat-icon>
+        @if (form.get('medida')?.touched && form.get('medida')?.hasError('required')) {
+          <mat-error>Medida é obrigatória</mat-error>
+        }
+      </mat-form-field>
+    </div>
+
+    <!-- Valor (calculado, desabilitado) -->
+    <div class="linha-campos">
+      <mat-form-field class="full-width" appearance="fill">
+        <mat-label>Valor</mat-label>
+        <span matPrefix>R$&nbsp;</span>
+        <input matInput formControlName="valor"
+               mask="separator.2" thousandSeparator="." decimalMarker=","
+               placeholder="0,00">
+        <mat-icon matSuffix>attach_money</mat-icon>
+      </mat-form-field>
+    </div>
+
+  </form>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button mat-raised-button color="warn" (click)="onCancelar()" [disabled]="salvando">
+    <mat-icon>cancel</mat-icon> Cancelar
+  </button>
+  <button mat-raised-button color="primary" (click)="onAdicionar()"
+          [disabled]="form.invalid || salvando">
+    <mat-icon>add</mat-icon> Adicionar
+  </button>
+</mat-dialog-actions>
+

@@ -1,0 +1,75 @@
+:host {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  width: 100%;
+  margin: 0;
+  padding: 5px;
+  box-sizing: border-box;
+}
+
+:host > div {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  width: 100%;
+}
+
+:host > div > mat-card {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  width: 100%;
+  margin: 0;
+}
+
+mat-card-content {
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  flex: 1;
+}
+
+.produto-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 24px;
+  flex-shrink: 0;
+}
+
+.linha-campos {
+  display: flex;
+  gap: 16px;
+  width: 100%;
+}
+
+.half-width {
+  flex: 1 1 0;
+}
+
+.full-width {
+  width: 100%;
+}
+
+.botoes {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  margin-top: 16px;
+  flex-shrink: 0;
+}
+
+@media (max-width: 600px) {
+  .produto-card {
+    max-width: 100%;
+    margin: 8px;
+    padding: 8px 0;
+  }
+  .botoes {
+    flex-direction: column;
+    gap: 8px;
+  }
+}
+

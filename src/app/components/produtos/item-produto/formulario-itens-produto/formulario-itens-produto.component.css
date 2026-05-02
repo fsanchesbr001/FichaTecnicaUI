@@ -1,0 +1,36 @@
+.linha-campos {
+  display: flex;
+  gap: 16px;
+  width: 100%;
+  margin-bottom: 4px;
+}
+
+.half-width {
+  flex: 1 1 0;
+}
+
+.full-width {
+  width: 100%;
+}
+
+mat-dialog-content {
+  min-width: 420px;
+  padding-top: 8px !important;
+}
+
+mat-dialog-actions {
+  padding: 8px 0 4px 0;
+  gap: 8px;
+}
+
+@media (max-width: 500px) {
+  mat-dialog-content {
+    min-width: unset;
+    width: 100%;
+  }
+  .linha-campos {
+    flex-direction: column;
+    gap: 0;
+  }
+}
+

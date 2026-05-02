@@ -1,0 +1,67 @@
+:host {
+  display: block;
+  width: 100%;
+}
+
+.lista-titulo {
+  text-align: center;
+  margin: 16px 0 8px 0;
+  font-size: 1rem;
+  font-weight: 500;
+  color: rgba(0, 0, 0, 0.7);
+  border-top: 1px solid #e0e0e0;
+  padding-top: 12px;
+}
+
+.lista-table-container {
+  width: 100%;
+  overflow-x: auto;
+}
+
+table {
+  width: 100%;
+  min-width: 480px;
+}
+
+.col-item {
+  width: 30%;
+  min-width: 100px;
+}
+
+.col-quantidade {
+  width: 15%;
+  min-width: 80px;
+  text-align: right;
+}
+
+.col-medida {
+  width: 20%;
+  min-width: 80px;
+}
+
+.col-valor {
+  width: 20%;
+  min-width: 90px;
+  text-align: right;
+}
+
+.col-acoes {
+  width: 15%;
+  min-width: 70px;
+}
+
+.lista-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin: 8px 0 4px 0;
+  flex-wrap: wrap;
+}
+
+@media (max-width: 600px) {
+  table {
+    min-width: 0;
+    font-size: 13px;
+  }
+}
+

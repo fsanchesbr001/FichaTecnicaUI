@@ -1,4 +1,4 @@
-import { Component, Input, OnChanges, SimpleChanges, ViewChild, AfterViewInit } from '@angular/core';
+import { Component, Input, OnChanges, SimpleChanges, ViewChild, AfterViewInit, Output, EventEmitter } from '@angular/core';
 import { MatTableDataSource, MatTableModule } from '@angular/material/table';
 import { MatPaginator, MatPaginatorModule } from '@angular/material/paginator';
 import { MatButtonModule } from '@angular/material/button';
@@ -6,14 +6,16 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { HttpClient } from '@angular/common/http';
-import { CommonModule, CurrencyPipe } from '@angular/common';
+import { CommonModule } from '@angular/common';
 import { environment } from '../../../../../../environments/environment';
 import { DialogoConfirmacaoComponent } from '../../../shared/dialogo-confirmacao/dialogo-confirmacao.component';
 import { ToastService } from '../../../../services/toast.service';
 import { FormularioItensProdutoComponent } from '../formulario-itens-produto/formulario-itens-produto.component';
 
 export interface ItemProduto {
-  codigo: number;
+  codigo?: number;
+  cdItem?: number;
+  idItem?: number;
   nomeProduto: string;
   nomeItem: string;
   qtdeItem: number;
@@ -38,7 +40,6 @@ export interface UnidadeMedida {
     MatTooltipModule,
     MatPaginatorModule,
     MatDialogModule,
-    CurrencyPipe,
   ],
   templateUrl: './lista-itens-produto.component.html',
   styleUrl: './lista-itens-produto.component.css'
@@ -47,6 +48,7 @@ export class ListaItensProdutoComponent implements AfterViewInit, OnChanges {
 
   @Input() codigoProduto!: number;
   @Input() nomeProduto: string = '';
+  @Output() valorItensAtualizado = new EventEmitter<number>();
 
   displayedColumns = ['item', 'quantidade', 'medida', 'valor', 'acoes'];
   dataSource = new MatTableDataSource<ItemProduto>([]);
@@ -84,16 +86,37 @@ export class ListaItensProdutoComponent implements AfterViewInit, OnChanges {
     return this.unidades.find(u => u.codigo === cdUnidade)?.nome ?? String(cdUnidade);
   }
 
+  private calcularTotalItens(itens: ItemProduto[]): number {
+    return (itens ?? []).reduce((acc, item) => acc + this.parseValorItem(item.valorItem), 0);
+  }
+
+  private parseValorItem(valor: string | number | null | undefined): number {
+    if (valor == null) return 0;
+    if (typeof valor === 'number') return valor;
+    const limpo = String(valor)
+      .replace(/[R$\s\u00A0]/g, '')
+      .replace(/\./g, '')
+      .replace(',', '.');
+    return parseFloat(limpo) || 0;
+  }
+
+  private obterIdItem(itemProduto: ItemProduto): number | null {
+    return itemProduto.cdItem ?? itemProduto.idItem ?? itemProduto.codigo ?? null;
+  }
+
   carregarItens(): void {
     const url = `${environment.API}ficha-tecnica/produtos/${this.codigoProduto}/itens`;
     this.http.get<ItemProduto[]>(url).subscribe({
       next: (dados) => {
-        this.dataSource.data = dados ?? [];
+        const itens = dados ?? [];
+        this.dataSource.data = itens;
         this.dataSource.paginator = this.paginator;
+        this.valorItensAtualizado.emit(this.calcularTotalItens(itens));
       },
       error: () => {
         this.dataSource.data = [];
         this.dataSource.paginator = this.paginator;
+        this.valorItensAtualizado.emit(0);
         this.toast.erro('ERRO DE CHAMADA HTTP');
       }
     });
@@ -111,7 +134,13 @@ export class ListaItensProdutoComponent implements AfterViewInit, OnChanges {
   }
 
   private excluirItemProduto(itemProduto: ItemProduto): void {
-    const url = `${environment.API}ficha-tecnica/produtos/${this.codigoProduto}/itens/${itemProduto.codigo}`;
+    const idItem = this.obterIdItem(itemProduto);
+    if (idItem == null) {
+      this.toast.erro('Não foi possível identificar o item para exclusão.');
+      return;
+    }
+
+    const url = `${environment.API}ficha-tecnica/produtos/${this.codigoProduto}/itens/${idItem}`;
     this.http.delete(url, { responseType: 'text' }).subscribe({
       next: () => {
         this.toast.sucesso('Item removido do produto com sucesso.');

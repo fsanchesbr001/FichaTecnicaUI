@@ -23,6 +23,10 @@ mat-dialog-actions {
   gap: 8px;
 }
 
+mat-dialog-actions button:last-child {
+  margin-right: 5px;
+}
+
 @media (max-width: 500px) {
   mat-dialog-content {
     min-width: unset;
@@ -33,4 +37,3 @@ mat-dialog-actions {
     gap: 0;
   }
 }
-

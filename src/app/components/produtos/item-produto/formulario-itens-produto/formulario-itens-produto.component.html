@@ -54,29 +54,16 @@
         }
       </mat-form-field>
     </div>
-
-    <!-- Valor (calculado, desabilitado) -->
-    <div class="linha-campos">
-      <mat-form-field class="full-width" appearance="fill">
-        <mat-label>Valor</mat-label>
-        <span matPrefix>R$&nbsp;</span>
-        <input matInput formControlName="valor"
-               mask="separator.2" thousandSeparator="." decimalMarker=","
-               placeholder="0,00">
-        <mat-icon matSuffix>attach_money</mat-icon>
-      </mat-form-field>
-    </div>
-
   </form>
 </mat-dialog-content>
 
 <mat-dialog-actions align="end">
-  <button mat-raised-button color="warn" (click)="onCancelar()" [disabled]="salvando">
-    <mat-icon>cancel</mat-icon> Cancelar
-  </button>
   <button mat-raised-button color="primary" (click)="onAdicionar()"
           [disabled]="form.invalid || salvando">
-    <mat-icon>add</mat-icon> Adicionar
+    <mat-icon>add</mat-icon> Adicionar Item
+  </button>
+  <button mat-raised-button color="warn" (click)="onCancelar()" [disabled]="salvando">
+    <mat-icon>cancel</mat-icon> Cancelar
   </button>
 </mat-dialog-actions>
 

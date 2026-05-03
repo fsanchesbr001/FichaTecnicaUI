@@ -108,6 +108,15 @@ export class FormularioProdutosComponent implements OnInit {
     return parseFloat(limpo) || 0;
   }
 
+  private formatarMoedaSemPrefixo(valor: number): string {
+    const valorNormalizado = Number.isFinite(valor) ? valor : 0;
+    return valorNormalizado.toFixed(2).replace('.', ',');
+  }
+
+  onValorItensAtualizado(total: number): void {
+    this.form.get('valorItens')?.setValue(this.formatarMoedaSemPrefixo(total), { emitEvent: false });
+  }
+
   onSalvar(): void {
     if (this.form.invalid) {
       this.toast.aviso('Por favor, corrija os erros no formulário.');

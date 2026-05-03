@@ -78,7 +78,8 @@
         @if (produtoParaEditar) {
           <app-lista-itens-produto
             [codigoProduto]="produtoParaEditar.codigo"
-            [nomeProduto]="produtoParaEditar.nome">
+            [nomeProduto]="produtoParaEditar.nome"
+            (valorItensAtualizado)="onValorItensAtualizado($event)">
           </app-lista-itens-produto>
         }
 

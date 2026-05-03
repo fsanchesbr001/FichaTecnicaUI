@@ -1,6 +1,12 @@
 <div class="info-seguranca-container">
   <span class="info-item">Usuário: <strong>{{ usuario }}</strong></span>
   <span class="info-item">Perfil: <strong>{{ perfil }}</strong></span>
-  <span class="info-item">Sessão expira em: <strong>{{ tempoRestante }}</strong></span>
+  <span class="info-item">Sessão expira em:
+    <strong
+      [class.tempo-alerta]="alertaAtivo"
+      [style.visibility]="visivel ? 'visible' : 'hidden'">
+      {{ tempoRestante }}
+    </strong>
+  </span>
 </div>
 

@@ -11,6 +11,7 @@ import { NgxMaskDirective, provideNgxMask } from 'ngx-mask';
 import { environment } from '../../../../../environments/environment';
 import { ToastService } from '../../../services/toast.service';
 import { ListaItensProdutoComponent } from '../item-produto/lista-itens-produto/lista-itens-produto.component';
+import { GraficoPizzaProdutoComponent } from '../grafico-pizza-produto/grafico-pizza-produto.component';
 
 @Component({
   selector: 'app-formulario-produtos',
@@ -32,6 +33,7 @@ import { ListaItensProdutoComponent } from '../item-produto/lista-itens-produto/
     MatButton,
     NgxMaskDirective,
     ListaItensProdutoComponent,
+    GraficoPizzaProdutoComponent,
   ],
   providers: [provideNgxMask()],
   templateUrl: './formulario-produtos.component.html',

@@ -1,0 +1,17 @@
+<div class="grafico-container">
+  <h4 class="grafico-titulo" [style.display]="dados ? 'block' : 'none'">
+    Composição de Custo - {{ dados?.nomeProduto }}
+  </h4>
+  <div class="grafico-subtitulo" [style.display]="dados ? 'block' : 'none'">
+    Total de Itens: {{ dados?.valorTotal }}
+  </div>
+
+  <canvas
+    #chartCanvas
+    [style.display]="dados && !carregando && !erro ? 'block' : 'none'">
+  </canvas>
+
+  <div *ngIf="carregando" class="grafico-loading">Carregando gráfico...</div>
+  <div *ngIf="erro" class="grafico-erro">{{ erro }}</div>
+</div>
+

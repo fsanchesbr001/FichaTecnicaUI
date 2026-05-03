@@ -18,3 +18,9 @@
   color: #1976d2;
 }
 
+/* Alerta de expiração: fonte vermelha, pisca via visibility controlada pelo component */
+.info-item strong.tempo-alerta {
+  color: #d32f2f !important;
+  font-weight: 700;
+}
+

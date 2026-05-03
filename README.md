@@ -93,3 +93,4 @@ For more information on using the Angular CLI, including detailed command refere
 - 1.0.30 - Melhorias no layout do gráfico e geração de PDF de detalhes de Itens no servidor.
 - 1.0.31 - Adicionado Produto e Itens de Produto.
 - 1.0.32 - Correção de layout e melhorias de usabilidade no componente de Itens Produto.
+- 1.0.33 - Adicionado Grafico de Valores dos Itens.

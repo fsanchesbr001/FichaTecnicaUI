@@ -74,6 +74,11 @@
           </mat-form-field>
         </div>
 
+        <!-- Gráfico de pizza de composição do produto — somente na edição -->
+        @if (produtoParaEditar) {
+          <app-grafico-pizza-produto [codigoProduto]="produtoParaEditar.codigo"></app-grafico-pizza-produto>
+        }
+
         <!-- Lista de Itens do Produto — somente na edição -->
         @if (produtoParaEditar) {
           <app-lista-itens-produto

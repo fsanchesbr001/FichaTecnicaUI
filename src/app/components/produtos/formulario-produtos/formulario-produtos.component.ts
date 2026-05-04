@@ -44,6 +44,7 @@ export class FormularioProdutosComponent implements OnInit {
   form!: FormGroup;
   salvando = false;
   protected produtoParaEditar: any = null;
+  graficoAtualizacaoToken = 0;
 
   private readonly urlProdutos = `${environment.API}ficha-tecnica/produtos`;
   private readonly urlGerarPdf = `${environment.API}ficha-tecnica/produtos/gerar-pdf-detalhe`;
@@ -117,6 +118,7 @@ export class FormularioProdutosComponent implements OnInit {
 
   onValorItensAtualizado(total: number): void {
     this.form.get('valorItens')?.setValue(this.formatarMoedaSemPrefixo(total), { emitEvent: false });
+    this.graficoAtualizacaoToken++;
   }
 
   onSalvar(): void {

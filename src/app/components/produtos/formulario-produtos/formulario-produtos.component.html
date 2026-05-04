@@ -6,9 +6,9 @@
     <mat-card-content>
       <form [formGroup]="form" autocomplete="off">
 
-        <!-- Nome -->
-        <div class="linha-campos">
-          <mat-form-field class="full-width" appearance="fill">
+        <!-- Nome e Descrição -->
+        <div class="linha-campos linha-2-campos">
+          <mat-form-field class="metade-width" appearance="fill">
             <mat-label>Nome</mat-label>
             <input matInput type="text" placeholder="Nome do produto" formControlName="nome"
                    maxlength="255" size="50" required>
@@ -21,11 +21,8 @@
               <mat-error>Nome deve ter no máximo 255 caracteres</mat-error>
             }
           </mat-form-field>
-        </div>
 
-        <!-- Descrição -->
-        <div class="linha-campos">
-          <mat-form-field class="full-width" appearance="fill">
+          <mat-form-field class="metade-width" appearance="fill">
             <mat-label>Descrição</mat-label>
             <input matInput type="text" placeholder="Descrição do produto" formControlName="descricao"
                    maxlength="255" size="50">
@@ -36,9 +33,9 @@
           </mat-form-field>
         </div>
 
-        <!-- Imagem -->
-        <div class="linha-campos">
-          <mat-form-field class="full-width" appearance="fill">
+        <!-- Imagem, Valor de Venda e Valor de Itens -->
+        <div class="linha-campos linha-3-campos">
+          <mat-form-field class="campo-imagem" appearance="fill">
             <mat-label>Imagem</mat-label>
             <input matInput type="text" placeholder="Nome do arquivo de imagem" formControlName="imagem"
                    maxlength="255" size="50">
@@ -47,11 +44,8 @@
               <mat-error>Imagem deve ter no máximo 255 caracteres</mat-error>
             }
           </mat-form-field>
-        </div>
 
-        <!-- Valores -->
-        <div class="linha-campos">
-          <mat-form-field class="half-width" appearance="fill">
+          <mat-form-field class="campo-valor" appearance="fill">
             <mat-label>Valor de Venda</mat-label>
             <span matPrefix>R$&nbsp;</span>
             <input matInput formControlName="valorVenda"
@@ -64,7 +58,7 @@
             }
           </mat-form-field>
 
-          <mat-form-field class="half-width" appearance="fill">
+          <mat-form-field class="campo-valor" appearance="fill">
             <mat-label>Valor de Itens</mat-label>
             <span matPrefix>R$&nbsp;</span>
             <input matInput formControlName="valorItens"
@@ -74,18 +68,24 @@
           </mat-form-field>
         </div>
 
-        <!-- Gráfico de pizza de composição do produto — somente na edição -->
+        <!-- Lista e Gráfico somente na edição -->
         @if (produtoParaEditar) {
-          <app-grafico-pizza-produto [codigoProduto]="produtoParaEditar.codigo"></app-grafico-pizza-produto>
-        }
+          <div class="painel-edicao">
+            <div class="painel-coluna painel-lista">
+              <app-lista-itens-produto
+                [codigoProduto]="produtoParaEditar.codigo"
+                [nomeProduto]="produtoParaEditar.nome"
+                (valorItensAtualizado)="onValorItensAtualizado($event)">
+              </app-lista-itens-produto>
+            </div>
 
-        <!-- Lista de Itens do Produto — somente na edição -->
-        @if (produtoParaEditar) {
-          <app-lista-itens-produto
-            [codigoProduto]="produtoParaEditar.codigo"
-            [nomeProduto]="produtoParaEditar.nome"
-            (valorItensAtualizado)="onValorItensAtualizado($event)">
-          </app-lista-itens-produto>
+            <div class="painel-coluna painel-grafico">
+              <app-grafico-pizza-produto
+                [codigoProduto]="produtoParaEditar.codigo"
+                [atualizacaoToken]="graficoAtualizacaoToken">
+              </app-grafico-pizza-produto>
+            </div>
+          </div>
         }
 
         <!-- Botões -->

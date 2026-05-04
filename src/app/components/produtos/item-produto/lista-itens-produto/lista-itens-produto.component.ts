@@ -104,18 +104,33 @@ export class ListaItensProdutoComponent implements AfterViewInit, OnChanges {
     return itemProduto.cdItem ?? itemProduto.idItem ?? itemProduto.codigo ?? null;
   }
 
+  private normalizarRespostaItens(dados: any): ItemProduto[] {
+    if (Array.isArray(dados)) return dados;
+    if (Array.isArray(dados?.itens)) return dados.itens;
+    if (Array.isArray(dados?.content)) return dados.content;
+    return [];
+  }
+
   carregarItens(): void {
     const url = `${environment.API}ficha-tecnica/produtos/${this.codigoProduto}/itens`;
-    this.http.get<ItemProduto[]>(url).subscribe({
+    this.http.get<any>(url).subscribe({
       next: (dados) => {
-        const itens = dados ?? [];
+        const itens = this.normalizarRespostaItens(dados);
         this.dataSource.data = itens;
-        this.dataSource.paginator = this.paginator;
+
+        if (this.paginator) {
+          this.dataSource.paginator = this.paginator;
+          this.paginator.firstPage();
+        }
+
         this.valorItensAtualizado.emit(this.calcularTotalItens(itens));
       },
       error: () => {
         this.dataSource.data = [];
-        this.dataSource.paginator = this.paginator;
+        if (this.paginator) {
+          this.dataSource.paginator = this.paginator;
+          this.paginator.firstPage();
+        }
         this.valorItensAtualizado.emit(0);
         this.toast.erro('ERRO DE CHAMADA HTTP');
       }

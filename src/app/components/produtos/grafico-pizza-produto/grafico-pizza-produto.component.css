@@ -1,15 +1,15 @@
 .grafico-container {
   width: 100%;
-  margin: 8px 0 4px 0;
-  border-top: 1px solid #e0e0e0;
-  padding-top: 8px;
+  margin: 0;
+  padding: 0;
 }
 
 .grafico-titulo {
   text-align: center;
   margin: 0;
-  font-size: 14px;
-  color: #333;
+  font-size: 1rem;
+  font-weight: 500;
+  color: rgba(0, 0, 0, 0.7);
 }
 
 .grafico-subtitulo {
@@ -21,7 +21,8 @@
 
 canvas {
   width: 100% !important;
-  max-height: 280px;
+  min-height: 260px;
+  max-height: 360px;
 }
 
 .grafico-loading,
@@ -35,4 +36,3 @@ canvas {
 .grafico-erro {
   color: #c62828;
 }
-

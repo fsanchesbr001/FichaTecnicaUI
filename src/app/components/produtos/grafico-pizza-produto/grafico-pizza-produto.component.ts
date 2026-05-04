@@ -52,6 +52,7 @@ interface GraficoPizzaProdutoResponse {
 })
 export class GraficoPizzaProdutoComponent implements OnChanges, OnDestroy {
   @Input() codigoProduto: number | null = null;
+  @Input() atualizacaoToken = 0;
 
   @ViewChild('chartCanvas', { static: true }) chartCanvas!: ElementRef<HTMLCanvasElement>;
 
@@ -68,13 +69,40 @@ export class GraficoPizzaProdutoComponent implements OnChanges, OnDestroy {
   ) {}
 
   ngOnChanges(changes: SimpleChanges): void {
-    if (changes['codigoProduto'] && this.codigoProduto != null) {
+    const mudouProduto = !!changes['codigoProduto'];
+    const mudouAtualizacao = !!changes['atualizacaoToken'] && !changes['atualizacaoToken'].firstChange;
+
+    if ((mudouProduto || mudouAtualizacao) && this.codigoProduto != null) {
       this.carregarGrafico();
     }
   }
 
   ngOnDestroy(): void {
     this.destruirChart();
+  }
+
+  private normalizarResposta(resp: GraficoPizzaProdutoResponse): GraficoPizzaProdutoResponse {
+    const fatias = Array.isArray(resp?.fatias) ? resp.fatias : [];
+
+    const labels = Array.isArray(resp?.labels) && resp.labels.length > 0
+      ? resp.labels
+      : fatias.map(f => f.nomeItem);
+
+    const valores = Array.isArray(resp?.valores) && resp.valores.length > 0
+      ? resp.valores
+      : fatias.map(f => Number(f.porcentagem ?? 0));
+
+    const cores = Array.isArray(resp?.cores) && resp.cores.length > 0
+      ? resp.cores
+      : fatias.map(f => f.cor || '#36A2EB');
+
+    return {
+      ...resp,
+      fatias,
+      labels,
+      valores,
+      cores,
+    };
   }
 
   private carregarGrafico(): void {
@@ -87,17 +115,18 @@ export class GraficoPizzaProdutoComponent implements OnChanges, OnDestroy {
 
     this.http.get<GraficoPizzaProdutoResponse>(`${this.urlGraficoPizza}/${this.codigoProduto}/grafico-pizza`).subscribe({
       next: (resp) => {
-        this.dados = resp;
+        const dadosNormalizados = this.normalizarResposta(resp);
+        this.dados = dadosNormalizados;
         this.carregando = false;
 
-        if (!resp?.valores?.length) {
+        if (!dadosNormalizados.valores.length) {
           this.erro = 'Este produto não possui itens para gerar o gráfico.';
           this.cdr.detectChanges();
           return;
         }
 
         this.cdr.detectChanges();
-        this.construirChart(resp);
+        this.construirChart(dadosNormalizados);
       },
       error: () => {
         this.carregando = false;
@@ -127,6 +156,7 @@ export class GraficoPizzaProdutoComponent implements OnChanges, OnDestroy {
 
     const options: ChartOptions<'pie'> = {
       responsive: true,
+      maintainAspectRatio: true,
       plugins: {
         legend: {
           position: 'bottom',
@@ -163,4 +193,3 @@ export class GraficoPizzaProdutoComponent implements OnChanges, OnDestroy {
     }
   }
 }
-

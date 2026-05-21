@@ -6,6 +6,16 @@
     <mat-card-content>
       <form [formGroup]="form" autocomplete="off">
 
+        @if (produtoParaEditar && imagemIlustrativaUrl) {
+          <div class="imagem-ilustrativa-wrapper">
+            <img
+              class="imagem-ilustrativa"
+              [src]="imagemIlustrativaUrl"
+              alt="Imagem ilustrativa do produto"
+            />
+          </div>
+        }
+
         <!-- Nome e Descrição -->
         <div class="linha-campos linha-2-campos">
           <mat-form-field class="metade-width" appearance="fill">

@@ -38,6 +38,21 @@ mat-card-content {
   flex-shrink: 0;
 }
 
+.imagem-ilustrativa-wrapper {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  margin-bottom: 10px;
+}
+
+.imagem-ilustrativa {
+  width: 100%;
+  max-width: 520px;
+  max-height: 220px;
+  object-fit: contain;
+  border-radius: 6px;
+}
+
 .linha-campos {
   display: flex;
   width: 100%;

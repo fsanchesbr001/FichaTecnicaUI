@@ -95,3 +95,4 @@ For more information on using the Angular CLI, including detailed command refere
 - 1.0.32 - Correção de layout e melhorias de usabilidade no componente de Itens Produto.
 - 1.0.33 - Adicionado Grafico de Valores dos Itens.
 - 1.0.34 - Melhorias no layout do gráfico e correção de erros de Itens.
+- 1.0.35 - Adicionado Imagem em Produto.

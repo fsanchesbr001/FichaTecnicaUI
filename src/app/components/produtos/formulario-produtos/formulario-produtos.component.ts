@@ -73,6 +73,11 @@ export class FormularioProdutosComponent implements OnInit {
     }
   }
 
+  get imagemIlustrativaUrl(): string {
+    const valorAtual = String(this.form.get('imagem')?.value ?? '').trim();
+    return valorAtual || String(this.produtoParaEditar?.imagem ?? '').trim();
+  }
+
   private parseMoeda(valor: string | number | null | undefined): string {
     if (valor == null) return '0,00';
     const str = String(valor);

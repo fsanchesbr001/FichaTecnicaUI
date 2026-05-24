@@ -1,0 +1,50 @@
+<mat-form-field class="full-width" [appearance]="appearance">
+  <mat-label>{{ label }}</mat-label>
+  <input
+    matInput
+    [value]="nomeExibido"
+    [placeholder]="placeholder"
+    [disabled]="desabilitado"
+    readonly
+    (click)="abrirSeletor()"
+    (blur)="marcarComoTocado()"
+  >
+
+  @if (nomeExibido) {
+    <button
+      mat-icon-button
+      matSuffix
+      type="button"
+      aria-label="Limpar imagem selecionada"
+      [disabled]="desabilitado"
+      (click)="limparSelecao($event)"
+    >
+      <mat-icon>close</mat-icon>
+    </button>
+  }
+
+  <button
+    mat-icon-button
+    matSuffix
+    type="button"
+    aria-label="Selecionar arquivo de imagem"
+    [disabled]="desabilitado"
+    (click)="abrirSeletor()"
+  >
+    <mat-icon>upload_file</mat-icon>
+  </button>
+
+  @if (erro) {
+    <mat-error>{{ erro }}</mat-error>
+  }
+</mat-form-field>
+
+<input
+  #fileInput
+  class="input-arquivo"
+  type="file"
+  [accept]="accept"
+  [disabled]="desabilitado"
+  (change)="onArquivoChange($event)"
+>
+

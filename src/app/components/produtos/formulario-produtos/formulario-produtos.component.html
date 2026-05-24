@@ -45,15 +45,13 @@
 
         <!-- Imagem, Valor de Venda e Valor de Itens -->
         <div class="linha-campos linha-3-campos">
-          <mat-form-field class="campo-imagem" appearance="fill">
-            <mat-label>Imagem</mat-label>
-            <input matInput type="text" placeholder="Nome do arquivo de imagem" formControlName="imagem"
-                   maxlength="255" size="50">
-            <mat-icon matSuffix>image</mat-icon>
-            @if (form.get('imagem')?.hasError('maxlength')) {
-              <mat-error>Imagem deve ter no máximo 255 caracteres</mat-error>
-            }
-          </mat-form-field>
+          <app-seletor-arquivo-imagem
+            class="campo-imagem"
+            formControlName="imagem"
+            placeholder="Selecione um arquivo de imagem"
+            [erro]="mensagemErroImagem"
+            (arquivoSelecionado)="onImagemSelecionada($event)">
+          </app-seletor-arquivo-imagem>
 
           <mat-form-field class="campo-valor" appearance="fill">
             <mat-label>Valor de Venda</mat-label>

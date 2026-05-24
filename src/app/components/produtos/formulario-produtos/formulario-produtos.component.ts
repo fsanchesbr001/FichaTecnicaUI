@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatCard, MatCardContent, MatCardHeader, MatCardTitle } from '@angular/material/card';
 import { MatError, MatFormField, MatInput, MatLabel, MatSuffix } from '@angular/material/input';
@@ -7,11 +7,13 @@ import { CommonModule } from '@angular/common';
 import { MatButton } from '@angular/material/button';
 import { Router, Navigation } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
+import { catchError, of, switchMap } from 'rxjs';
 import { NgxMaskDirective, provideNgxMask } from 'ngx-mask';
 import { environment } from '../../../../../environments/environment';
 import { ToastService } from '../../../services/toast.service';
 import { ListaItensProdutoComponent } from '../item-produto/lista-itens-produto/lista-itens-produto.component';
 import { GraficoPizzaProdutoComponent } from '../grafico-pizza-produto/grafico-pizza-produto.component';
+import { SeletorArquivoImagemComponent } from '../../shared/seletor-arquivo-imagem/seletor-arquivo-imagem.component';
 
 @Component({
   selector: 'app-formulario-produtos',
@@ -34,17 +36,22 @@ import { GraficoPizzaProdutoComponent } from '../grafico-pizza-produto/grafico-p
     NgxMaskDirective,
     ListaItensProdutoComponent,
     GraficoPizzaProdutoComponent,
+    SeletorArquivoImagemComponent,
   ],
   providers: [provideNgxMask()],
   templateUrl: './formulario-produtos.component.html',
   styleUrl: './formulario-produtos.component.css'
 })
-export class FormularioProdutosComponent implements OnInit {
+export class FormularioProdutosComponent implements OnInit, OnDestroy {
 
   form!: FormGroup;
   salvando = false;
   protected produtoParaEditar: any = null;
   graficoAtualizacaoToken = 0;
+  arquivoImagemSelecionado: File | null = null;
+
+  private previewImagemUrl: string | null = null;
+  private imagemAlteradaManualmente = false;
 
   private readonly urlProdutos = `${environment.API}ficha-tecnica/produtos`;
   private readonly urlGerarPdf = `${environment.API}ficha-tecnica/produtos/gerar-pdf-detalhe`;
@@ -73,9 +80,33 @@ export class FormularioProdutosComponent implements OnInit {
     }
   }
 
+  ngOnDestroy(): void {
+    this.revogarPreviewImagem();
+  }
+
   get imagemIlustrativaUrl(): string {
+    if (this.previewImagemUrl) {
+      return this.previewImagemUrl;
+    }
+
     const valorAtual = String(this.form.get('imagem')?.value ?? '').trim();
-    return valorAtual || String(this.produtoParaEditar?.imagem ?? '').trim();
+    if (valorAtual && this.ehUrlImagem(valorAtual)) {
+      return valorAtual;
+    }
+
+    if (!this.imagemAlteradaManualmente) {
+      return String(this.produtoParaEditar?.imagem ?? '').trim();
+    }
+
+    return '';
+  }
+
+  get mensagemErroImagem(): string | null {
+    if (this.form.get('imagem')?.hasError('maxlength')) {
+      return 'Imagem deve ter no máximo 255 caracteres';
+    }
+
+    return null;
   }
 
   private parseMoeda(valor: string | number | null | undefined): string {
@@ -126,6 +157,16 @@ export class FormularioProdutosComponent implements OnInit {
     this.graficoAtualizacaoToken++;
   }
 
+  onImagemSelecionada(file: File | null): void {
+    this.arquivoImagemSelecionado = file;
+    this.imagemAlteradaManualmente = true;
+    this.revogarPreviewImagem();
+
+    if (file) {
+      this.previewImagemUrl = URL.createObjectURL(file);
+    }
+  }
+
   onSalvar(): void {
     if (this.form.invalid) {
       this.toast.aviso('Por favor, corrija os erros no formulário.');
@@ -151,29 +192,60 @@ export class FormularioProdutosComponent implements OnInit {
   }
 
   private registrarProduto(): void {
-    this.http.post(this.urlProdutos, this.montarPayload()).subscribe({
+    this.http.post<any>(this.urlProdutos, this.montarPayload()).pipe(
+      switchMap((produto) => {
+        const idProduto = produto?.codigo ?? produto?.id;
+        if (this.arquivoImagemSelecionado && idProduto) {
+          return this.uploadImagem(idProduto).pipe(
+            catchError(() => {
+              this.toast.aviso('Produto salvo, mas ocorreu um erro ao fazer o upload da imagem.');
+              return of(null);
+            })
+          );
+        }
+        return of(null);
+      })
+    ).subscribe({
       next: () => {
         this.toast.sucesso('Produto registrado com sucesso.');
         this.router.navigate(['/principal/lista-produtos']);
       },
       error: (err) => {
         this.salvando = false;
-        this.toast.erro(this.extrairMensagemErro(err));
+        this.toast.erro(this.extrairMensagemErro(err, 'ERRO AO SALVAR PRODUTO'));
       }
     });
   }
 
   private atualizarProduto(): void {
-    this.http.put(`${this.urlProdutos}/${this.produtoParaEditar.codigo}`, this.montarPayload()).subscribe({
+    this.http.put<any>(`${this.urlProdutos}/${this.produtoParaEditar.codigo}`, this.montarPayload()).pipe(
+      switchMap(() => {
+        if (this.arquivoImagemSelecionado) {
+          return this.uploadImagem(this.produtoParaEditar.codigo).pipe(
+            catchError(() => {
+              this.toast.aviso('Produto salvo, mas ocorreu um erro ao fazer o upload da imagem.');
+              return of(null);
+            })
+          );
+        }
+        return of(null);
+      })
+    ).subscribe({
       next: () => {
         this.toast.sucesso('Produto atualizado com sucesso.');
         this.router.navigate(['/principal/lista-produtos']);
       },
       error: (err) => {
         this.salvando = false;
-        this.toast.erro(this.extrairMensagemErro(err));
+        this.toast.erro(this.extrairMensagemErro(err, 'ERRO AO SALVAR PRODUTO'));
       }
     });
+  }
+
+  private uploadImagem(idProduto: number): ReturnType<HttpClient['post']> {
+    const formData = new FormData();
+    formData.append('file', this.arquivoImagemSelecionado!, this.arquivoImagemSelecionado!.name);
+    return this.http.post(`${this.urlProdutos}/${idProduto}/imagem/upload`, formData);
   }
 
   /** Normaliza o campo monetário ao sair: garante sempre 2 casas decimais */
@@ -218,5 +290,16 @@ export class FormularioProdutosComponent implements OnInit {
       },
       error: () => this.toast.erro('ERRO AO GERAR PDF')
     });
+  }
+
+  private ehUrlImagem(valor: string): boolean {
+    return /^(https?:\/\/|\/|data:image\/)/i.test(valor);
+  }
+
+  private revogarPreviewImagem(): void {
+    if (this.previewImagemUrl) {
+      URL.revokeObjectURL(this.previewImagemUrl);
+      this.previewImagemUrl = null;
+    }
   }
 }

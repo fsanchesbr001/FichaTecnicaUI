@@ -8,7 +8,6 @@ import { MatButton } from '@angular/material/button';
 import { Router, Navigation } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
 import { catchError, of, switchMap } from 'rxjs';
-import { NgxMaskDirective, provideNgxMask } from 'ngx-mask';
 import { environment } from '../../../../../environments/environment';
 import { ToastService } from '../../../services/toast.service';
 import { ListaItensProdutoComponent } from '../item-produto/lista-itens-produto/lista-itens-produto.component';
@@ -33,12 +32,10 @@ import { SeletorArquivoImagemComponent } from '../../shared/seletor-arquivo-imag
     MatInput,
     MatSuffix,
     MatButton,
-    NgxMaskDirective,
     ListaItensProdutoComponent,
     GraficoPizzaProdutoComponent,
     SeletorArquivoImagemComponent,
   ],
-  providers: [provideNgxMask()],
   templateUrl: './formulario-produtos.component.html',
   styleUrl: './formulario-produtos.component.css'
 })
@@ -116,8 +113,10 @@ export class FormularioProdutosComponent implements OnInit, OnDestroy {
     const limpo = str.replace(/[R$\s]/g, '').replace(/\./g, '').replace(',', '.');
     const num = parseFloat(limpo);
     if (isNaN(num)) return '0,00';
-    // Formata de volta para padrão PT-BR sem prefixo (ngx-mask cuida do R$)
-    return num.toFixed(2).replace('.', ',');
+    return new Intl.NumberFormat('pt-BR', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    }).format(num);
   }
 
   private preencherFormulario(produto: any): void {
@@ -149,7 +148,37 @@ export class FormularioProdutosComponent implements OnInit, OnDestroy {
 
   private formatarMoedaSemPrefixo(valor: number): string {
     const valorNormalizado = Number.isFinite(valor) ? valor : 0;
-    return valorNormalizado.toFixed(2).replace('.', ',');
+    return new Intl.NumberFormat('pt-BR', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    }).format(valorNormalizado);
+  }
+
+  onMoedaInput(controlName: string, event: Event): void {
+    const input = event.target as HTMLInputElement | null;
+    const ctrl = this.form.get(controlName);
+    if (!input || !ctrl) return;
+
+    let texto = (input.value ?? '').replace(/[^\d,]/g, '');
+    if (!texto) {
+      ctrl.setValue('', { emitEvent: false });
+      return;
+    }
+
+    const idx = texto.indexOf(',');
+    if (idx >= 0) {
+      texto = `${texto.substring(0, idx + 1)}${texto.substring(idx + 1).replace(/,/g, '')}`;
+    }
+
+    const temVirgula = texto.includes(',');
+    const [parteInteira = '', parteDecimal = ''] = texto.split(',');
+    const inteiroLimpo = parteInteira.replace(/^0+(?=\d)/, '');
+    const inteiroComMilhar = (inteiroLimpo || '0').replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+    const decimalLimitado = parteDecimal.replace(/\D/g, '').substring(0, 2);
+    const formatado = temVirgula ? `${inteiroComMilhar},${decimalLimitado}` : inteiroComMilhar;
+
+    input.value = formatado;
+    ctrl.setValue(formatado, { emitEvent: false });
   }
 
   onValorItensAtualizado(total: number): void {
@@ -252,19 +281,34 @@ export class FormularioProdutosComponent implements OnInit, OnDestroy {
   normalizarMoeda(controlName: string): void {
     const ctrl = this.form.get(controlName);
     if (!ctrl) return;
-    let valor = String(ctrl.value ?? '').trim();
-    if (!valor) {
+
+    let valor = String(ctrl.value ?? '').replace(/[^\d,]/g, '').trim();
+    if (!valor || valor === ',') {
       ctrl.setValue('0,00', { emitEvent: false });
       return;
     }
-    if (!valor.includes(',')) {
-      // sem vírgula: adiciona ,00
-      ctrl.setValue(valor + ',00', { emitEvent: false });
-    } else {
-      // com vírgula: garante exatamente 2 casas decimais
-      const [inteiro, decimais] = valor.split(',');
-      ctrl.setValue(`${inteiro},${(decimais ?? '').padEnd(2, '0').substring(0, 2)}`, { emitEvent: false });
+
+    const idx = valor.indexOf(',');
+    if (idx >= 0) {
+      valor = `${valor.substring(0, idx + 1)}${valor.substring(idx + 1).replace(/,/g, '')}`;
     }
+
+    const [parteInteira = '', parteDecimal = ''] = valor.split(',');
+    const inteiroLimpo = parteInteira.replace(/^0+(?=\d)/, '');
+    const inteiroComMilhar = (inteiroLimpo || '0').replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+    const decimal = parteDecimal.replace(/\D/g, '').substring(0, 2);
+
+    if (!decimal) {
+      ctrl.setValue(`${inteiroComMilhar},00`, { emitEvent: false });
+      return;
+    }
+
+    if (decimal.length === 1) {
+      ctrl.setValue(`${inteiroComMilhar},${decimal}0`, { emitEvent: false });
+      return;
+    }
+
+    ctrl.setValue(`${inteiroComMilhar},${decimal}`, { emitEvent: false });
   }
 
   onCancelar(): void {

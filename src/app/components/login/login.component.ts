@@ -147,7 +147,7 @@ export class LoginComponent {
                 this.jwtService.setToken(token.jwt);
               }
               this.toast.sucesso('Login realizado com sucesso!');
-              this.router.navigate(['/principal/lista-usuarios']);
+               this.router.navigate(['/principal/lista-produtos']);
             },
             error: (erro:HttpErrorResponse)=>{
               console.log('=== FLUXO ERROR ===');

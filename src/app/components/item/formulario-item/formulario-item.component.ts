@@ -1,5 +1,5 @@
 import { Component, OnInit, ViewChild } from '@angular/core';
-import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { AbstractControl, FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, ValidationErrors, ValidatorFn, Validators } from '@angular/forms';
 import { MatCard, MatCardContent, MatCardHeader, MatCardTitle } from '@angular/material/card';
 import { MatError, MatFormField, MatInput, MatLabel, MatSuffix } from '@angular/material/input';
 import { MatIcon } from '@angular/material/icon';
@@ -17,6 +17,14 @@ export interface UnidadeMedida {
   nome: string;
   sigla: string;
 }
+
+const valorPositivoPtBrValidator: ValidatorFn = (control: AbstractControl): ValidationErrors | null => {
+  const valor = String(control.value ?? '').trim();
+  if (!valor) return null;
+
+  const numero = parseFloat(valor.replace(/[R$\s]/g, '').replace(/\./g, '').replace(',', '.'));
+  return Number.isFinite(numero) && numero > 0 ? null : { min: true };
+};
 
 @Component({
   selector: 'app-formulario-item',
@@ -69,7 +77,7 @@ export class FormularioItemComponent implements OnInit {
     this.form = this.fb.group({
       nome:    ['', [Validators.required, Validators.minLength(2), Validators.maxLength(100)]],
       unidade: ['', Validators.required],
-      valor:   ['', [Validators.required, Validators.min(0.0001)]],
+      valor:   ['', [Validators.required, valorPositivoPtBrValidator]],
     });
   }
 
@@ -112,8 +120,82 @@ export class FormularioItemComponent implements OnInit {
     this.form.patchValue({
       nome:    item.nome    ?? '',
       unidade: unidadeId,
-      valor:   valorNumerico,
+      valor:   this.formatarMoedaSemPrefixo(Number(valorNumerico) || 0),
     });
+  }
+
+  private converterParaNumero(mascara: string | number | null | undefined): number {
+    if (mascara == null || mascara === '') return 0;
+    const str = String(mascara).replace(/[R$\s]/g, '').replace(/\./g, '').replace(',', '.');
+    return parseFloat(str) || 0;
+  }
+
+  private formatarMoedaSemPrefixo(valor: number): string {
+    const valorNormalizado = Number.isFinite(valor) ? valor : 0;
+    return new Intl.NumberFormat('pt-BR', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    }).format(valorNormalizado);
+  }
+
+  onMoedaInput(controlName: string, event: Event): void {
+    const input = event.target as HTMLInputElement | null;
+    const ctrl = this.form.get(controlName);
+    if (!input || !ctrl) return;
+
+    let texto = (input.value ?? '').replace(/[^\d,]/g, '');
+    if (!texto) {
+      ctrl.setValue('', { emitEvent: false });
+      return;
+    }
+
+    const idx = texto.indexOf(',');
+    if (idx >= 0) {
+      texto = `${texto.substring(0, idx + 1)}${texto.substring(idx + 1).replace(/,/g, '')}`;
+    }
+
+    const temVirgula = texto.includes(',');
+    const [parteInteira = '', parteDecimal = ''] = texto.split(',');
+    const inteiroLimpo = parteInteira.replace(/^0+(?=\d)/, '');
+    const inteiroComMilhar = (inteiroLimpo || '0').replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+    const decimalLimitado = parteDecimal.replace(/\D/g, '').substring(0, 2);
+    const formatado = temVirgula ? `${inteiroComMilhar},${decimalLimitado}` : inteiroComMilhar;
+
+    input.value = formatado;
+    ctrl.setValue(formatado, { emitEvent: false });
+  }
+
+  normalizarMoeda(controlName: string): void {
+    const ctrl = this.form.get(controlName);
+    if (!ctrl) return;
+
+    let valor = String(ctrl.value ?? '').replace(/[^\d,]/g, '').trim();
+    if (!valor || valor === ',') {
+      ctrl.setValue('0,00', { emitEvent: false });
+      return;
+    }
+
+    const idx = valor.indexOf(',');
+    if (idx >= 0) {
+      valor = `${valor.substring(0, idx + 1)}${valor.substring(idx + 1).replace(/,/g, '')}`;
+    }
+
+    const [parteInteira = '', parteDecimal = ''] = valor.split(',');
+    const inteiroLimpo = parteInteira.replace(/^0+(?=\d)/, '');
+    const inteiroComMilhar = (inteiroLimpo || '0').replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+    const decimal = parteDecimal.replace(/\D/g, '').substring(0, 2);
+
+    if (!decimal) {
+      ctrl.setValue(`${inteiroComMilhar},00`, { emitEvent: false });
+      return;
+    }
+
+    if (decimal.length === 1) {
+      ctrl.setValue(`${inteiroComMilhar},${decimal}0`, { emitEvent: false });
+      return;
+    }
+
+    ctrl.setValue(`${inteiroComMilhar},${decimal}`, { emitEvent: false });
   }
 
   private extrairMensagemErro(err: any, fallback = 'ERRO DE CHAMADA HTTP'): string {
@@ -139,7 +221,11 @@ export class FormularioItemComponent implements OnInit {
 
   private registrarItem(): void {
     const raw = this.form.getRawValue();
-    const payload = { nome: raw.nome, unidadeMedida: { codigo: raw.unidade }, valor: raw.valor };
+    const payload = {
+      nome: raw.nome,
+      unidadeMedida: { codigo: raw.unidade },
+      valor: this.converterParaNumero(raw.valor)
+    };
     this.http.post(this.urlItens, payload).subscribe({
       next: () => {
         this.toast.sucesso('Item registrado com sucesso.');
@@ -154,7 +240,11 @@ export class FormularioItemComponent implements OnInit {
 
   private atualizarItem(): void {
     const raw = this.form.getRawValue();
-    const payload = { nome: raw.nome, unidadeMedida: { codigo: raw.unidade }, valor: raw.valor };
+    const payload = {
+      nome: raw.nome,
+      unidadeMedida: { codigo: raw.unidade },
+      valor: this.converterParaNumero(raw.valor)
+    };
     this.http.put(`${this.urlItens}/${this.itemParaEditar.codigo}`, payload).subscribe({
       next: () => {
         this.toast.sucesso('Item atualizado com sucesso.');

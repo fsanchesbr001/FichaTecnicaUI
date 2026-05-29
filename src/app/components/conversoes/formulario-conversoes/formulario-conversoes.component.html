@@ -49,7 +49,8 @@
 
           <mat-form-field class="full-width" appearance="fill">
             <mat-label>Fator</mat-label>
-            <input matInput type="number" placeholder="Fator de Conversão" formControlName="valor" required>
+            <input matInput placeholder="Fator de Conversão" formControlName="valor" required
+                   inputmode="decimal" (input)="onFatorInput($event)" (blur)="normalizarFator()">
             <mat-icon matSuffix>calculate</mat-icon>
             @if (form.get('valor')?.hasError('required')) {
               <mat-error>Fator é obrigatório</mat-error>

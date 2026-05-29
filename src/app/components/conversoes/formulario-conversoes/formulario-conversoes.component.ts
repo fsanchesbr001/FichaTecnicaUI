@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { AbstractControl, FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, ValidationErrors, ValidatorFn, Validators } from '@angular/forms';
 import { MatCard, MatCardContent, MatCardHeader, MatCardTitle } from '@angular/material/card';
 import { MatError, MatFormField, MatInput, MatLabel, MatSuffix } from '@angular/material/input';
 import { MatIcon } from '@angular/material/icon';
@@ -16,6 +16,14 @@ export interface UnidadeMedida {
   nome: string;
   sigla: string;
 }
+
+const fatorPositivoPtBrValidator: ValidatorFn = (control: AbstractControl): ValidationErrors | null => {
+  const valor = String(control.value ?? '').trim();
+  if (!valor) return null;
+
+  const numero = parseFloat(valor.replace(/\./g, '').replace(',', '.'));
+  return Number.isFinite(numero) && numero > 0 ? null : { min: true };
+};
 
 @Component({
   selector: 'app-formulario-conversoes',
@@ -70,7 +78,7 @@ export class FormularioConversoesComponent implements OnInit {
       unidadeDe:   ['', Validators.required],
       unidadePara: ['', Validators.required],
       operacao:    [this.operacoes[0].value, Validators.required],
-      valor:       ['', [Validators.required, Validators.min(0.0001)]],
+      valor:       ['', [Validators.required, fatorPositivoPtBrValidator]],
     });
   }
 
@@ -105,8 +113,64 @@ export class FormularioConversoesComponent implements OnInit {
       unidadeDe:   unidadeDeId,
       unidadePara: unidadeParaId,
       operacao:    c.operacao ?? '',
-      valor:       c.valor    ?? '',
+      valor:       this.formatarNumeroParaExibicao(c.valor),
     });
+  }
+
+  private converterParaNumero(valor: string | number | null | undefined): number {
+    if (valor == null || valor === '') return 0;
+    const str = String(valor).replace(/\./g, '').replace(',', '.');
+    return parseFloat(str) || 0;
+  }
+
+  private formatarNumeroParaExibicao(valor: string | number | null | undefined): string {
+    if (valor == null || valor === '') return '';
+    const numero = typeof valor === 'number' ? valor : this.converterParaNumero(valor);
+    if (!Number.isFinite(numero)) return '';
+    const formatado = new Intl.NumberFormat('pt-BR', {
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 6
+    }).format(numero);
+    return formatado;
+  }
+
+  onFatorInput(event: Event): void {
+    const input = event.target as HTMLInputElement | null;
+    if (!input) return;
+
+    let texto = (input.value ?? '').replace(/[^\d,]/g, '');
+    const primeiraVirgula = texto.indexOf(',');
+    if (primeiraVirgula >= 0) {
+      texto = `${texto.substring(0, primeiraVirgula + 1)}${texto.substring(primeiraVirgula + 1).replace(/,/g, '')}`;
+    }
+
+    const partes = texto.split(',');
+    const inteiro = (partes[0] ?? '').replace(/^0+(?=\d)/, '');
+    const inteiroComMilhar = (inteiro || '0').replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+    const decimal = (partes[1] ?? '').replace(/\D/g, '').substring(0, 6);
+
+    const valorFormatado = decimal ? `${inteiroComMilhar},${decimal}` : inteiroComMilhar;
+    input.value = valorFormatado;
+    this.form.get('valor')?.setValue(valorFormatado, { emitEvent: false });
+  }
+
+  normalizarFator(): void {
+    const ctrl = this.form.get('valor');
+    if (!ctrl) return;
+
+    const valorAtual = String(ctrl.value ?? '').trim();
+    if (!valorAtual) {
+      ctrl.setValue('', { emitEvent: false });
+      return;
+    }
+
+    const numero = this.converterParaNumero(ctrl.value);
+    const formatado = new Intl.NumberFormat('pt-BR', {
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 6,
+    }).format(numero);
+
+    ctrl.setValue(formatado, { emitEvent: false });
   }
 
   private extrairMensagemErro(err: any, fallback = 'ERRO DE CHAMADA HTTP'): string {
@@ -131,7 +195,8 @@ export class FormularioConversoesComponent implements OnInit {
   }
 
   private registrarConversao(): void {
-    const payload = this.form.getRawValue();
+    const raw = this.form.getRawValue();
+    const payload = { ...raw, valor: this.converterParaNumero(raw.valor) };
     this.http.post(this.urlConversoes, payload).subscribe({
       next: () => {
         this.toast.sucesso('Conversão registrada com sucesso.');
@@ -145,7 +210,8 @@ export class FormularioConversoesComponent implements OnInit {
   }
 
   private atualizarConversao(): void {
-    const payload = this.form.getRawValue();
+    const raw = this.form.getRawValue();
+    const payload = { ...raw, valor: this.converterParaNumero(raw.valor) };
     this.http.put(`${this.urlConversoes}/${this.conversaoParaEditar.codigo}`, payload).subscribe({
       next: () => {
         this.toast.sucesso('Conversão atualizada com sucesso.');

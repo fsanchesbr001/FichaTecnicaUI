@@ -57,7 +57,7 @@
             <mat-label>Valor de Venda</mat-label>
             <span matPrefix>R$&nbsp;</span>
             <input matInput formControlName="valorVenda"
-                   mask="separator.2" thousandSeparator="." decimalMarker=","
+                   inputmode="decimal" (input)="onMoedaInput('valorVenda', $event)"
                    placeholder="0,00" required
                    (blur)="normalizarMoeda('valorVenda')">
             <mat-icon matSuffix>attach_money</mat-icon>
@@ -70,7 +70,6 @@
             <mat-label>Valor de Itens</mat-label>
             <span matPrefix>R$&nbsp;</span>
             <input matInput formControlName="valorItens"
-                   mask="separator.2" thousandSeparator="." decimalMarker=","
                    placeholder="0,00">
             <mat-icon matSuffix>receipt_long</mat-icon>
           </mat-form-field>

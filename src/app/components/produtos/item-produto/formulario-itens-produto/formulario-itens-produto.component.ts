@@ -98,6 +98,15 @@ export class FormularioItensProdutoComponent implements OnInit {
     return parseFloat(limpo) || 0;
   }
 
+  normalizarInteiro(controlName: string): void {
+    const ctrl = this.form.get(controlName);
+    if (!ctrl) return;
+
+    const apenasDigitos = String(ctrl.value ?? '').replace(/\D/g, '');
+    const numero = parseInt(apenasDigitos || '0', 10);
+    ctrl.setValue(new Intl.NumberFormat('pt-BR', { maximumFractionDigits: 0 }).format(numero), { emitEvent: false });
+  }
+
   onAdicionar(): void {
     if (this.form.invalid) {
       this.toast.aviso('Por favor, corrija os erros no formulário.');

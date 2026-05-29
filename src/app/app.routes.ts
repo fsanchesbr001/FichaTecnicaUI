@@ -1,4 +1,6 @@
 import { Routes } from '@angular/router';
+import { authChildGuard, authGuard } from './guards/auth.guard';
+import { publicGuard } from './guards/public.guard';
 import {TelaPrincipalComponent} from './components/tela-principal/tela-principal.component';
 import {ListaUsuariosComponent} from './components/usuarios/lista-usuarios/lista-usuarios.component';
 import {FormularioUsuariosComponent} from './components/usuarios/formulario-usuarios/formulario-usuarios.component';
@@ -18,16 +20,19 @@ import {FormularioProdutosComponent} from './components/produtos/formulario-prod
 export const routes: Routes = [
   {
     path : '',
+    canActivate: [publicGuard],
     loadComponent: () => import('./components/login/login.component')
       .then(m => m.LoginComponent)
   },
   {
     path: 'recuperar-senha',
+    canActivate: [publicGuard],
     loadComponent: () => import('./components/recuperar-senha/recuperar-senha.component')
       .then(m => m.RecuperarSenhaComponent)
   },
   {
     path: 'solicitar-token',
+    canActivate: [publicGuard],
     loadComponent: () => import('./components/solicitar-token/solicitar-token.component')
       .then(m => m.SolicitarTokenComponent)
   },
@@ -38,6 +43,8 @@ export const routes: Routes = [
   {
     path: 'principal',
     component: TelaPrincipalComponent,
+    canActivate: [authGuard],
+    canActivateChild: [authChildGuard],
     children: [
       { path: 'lista-usuarios', component: ListaUsuariosComponent },
       { path: 'formulario-usuarios', component: FormularioUsuariosComponent},
@@ -51,5 +58,9 @@ export const routes: Routes = [
       { path: 'lista-produtos', component: ListaProdutosComponent },
       { path: 'formulario-produto', component: FormularioProdutosComponent },
     ]
+  },
+  {
+    path: '**',
+    redirectTo: ''
   }
 ];

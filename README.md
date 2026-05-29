@@ -97,3 +97,4 @@ For more information on using the Angular CLI, including detailed command refere
 - 1.0.34 - Melhorias no layout do gráfico e correção de erros de Itens.
 - 1.0.35 - Adicionado Imagem em Produto.
 - 1.0.36 - Melhorias no layout do formulário de Produto e exibição de imagem.
+- 1.0.37 - Adicionado Guards e melhoria de formatação numérica.

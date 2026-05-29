@@ -33,8 +33,9 @@
       <mat-form-field class="half-width" appearance="fill">
         <mat-label>Quantidade</mat-label>
         <input matInput formControlName="quantidade"
-               mask="separator.3" thousandSeparator="." decimalMarker=","
-               placeholder="0" required>
+               mask="separator.0" thousandSeparator="."
+               placeholder="0" required
+               (blur)="normalizarInteiro('quantidade')">
         <mat-icon matSuffix>numbers</mat-icon>
         @if (form.get('quantidade')?.touched && form.get('quantidade')?.hasError('required')) {
           <mat-error>Quantidade é obrigatória</mat-error>

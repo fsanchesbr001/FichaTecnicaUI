@@ -6,7 +6,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { Router } from '@angular/router';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { environment } from '../../../../../environments/environment';
 import { DialogoConfirmacaoComponent } from '../../shared/dialogo-confirmacao/dialogo-confirmacao.component';
 import { ToastService } from '../../../services/toast.service';
@@ -37,8 +37,13 @@ export class ListaUnidadesComponent implements AfterViewInit, OnInit {
 
   @ViewChild(MatPaginator) paginator!: MatPaginator;
 
-  private readonly urlListar   = `${environment.API}ficha-tecnica/unidades-medida`;
-  private readonly urlGerarPdf = `${environment.API}ficha-tecnica/unidades-medida/gerar-pdf-lista`;
+  private readonly urlListar = `${environment.API}ficha-tecnica/unidades-medida`;
+  private readonly urlGerarPdfCandidatas = [
+    `${environment.API}ficha-tecnica/unidades-medida/relatorios/lista`,
+    `${environment.API}ficha-tecnica/unidades-medidas/gerar-pdf-lista`,
+    `${environment.API}ficha-tecnica/relatorios/unidades-medida/gerar-pdf-lista`,
+    `${environment.API}ficha-tecnica/relatorios/unidades-medidas/gerar-pdf-lista`,
+  ];
 
   constructor(
     private router: Router,
@@ -101,31 +106,57 @@ export class ListaUnidadesComponent implements AfterViewInit, OnInit {
   }
 
   onImprimir(): void {
-    this.http.get(this.urlGerarPdf, { responseType: 'blob' }).subscribe({
-      next: (blob) => {
-        const now = new Date();
-        const aaaa = now.getFullYear().toString();
-        const mm   = (now.getMonth() + 1).toString().padStart(2, '0');
-        const dd   = now.getDate().toString().padStart(2, '0');
-        const hh   = now.getHours().toString().padStart(2, '0');
-        const min  = now.getMinutes().toString().padStart(2, '0');
-        const ss   = now.getSeconds().toString().padStart(2, '0');
-        const filename = `lista-medidas-${aaaa}${mm}${dd}-${hh}:${min}:${ss}.pdf`;
+    const now = new Date();
+    const aaaa = now.getFullYear().toString();
+    const mm   = (now.getMonth() + 1).toString().padStart(2, '0');
+    const dd   = now.getDate().toString().padStart(2, '0');
+    const hh   = now.getHours().toString().padStart(2, '0');
+    const min  = now.getMinutes().toString().padStart(2, '0');
+    const ss   = now.getSeconds().toString().padStart(2, '0');
+    const filename = `lista-medidas-${aaaa}${mm}${dd}-${hh}:${min}:${ss}.pdf`;
 
-        const url = URL.createObjectURL(blob);
-        const anchor = document.createElement('a');
-        anchor.href = url;
-        anchor.download = filename;
-        anchor.click();
-        URL.revokeObjectURL(url);
-      },
-      error: () => {
-        this.toast.erro('ERRO AO GERAR PDF');
-      }
-    });
+    this.tentarGerarPdf(0, filename);
   }
 
   onNovo(): void {
     this.router.navigate(['/principal/formulario-medidas']);
+  }
+
+  private tentarGerarPdf(indiceUrl: number, filename: string): void {
+    const url = this.urlGerarPdfCandidatas[indiceUrl];
+    if (!url) {
+      this.toast.erro('ERRO AO GERAR PDF');
+      return;
+    }
+
+    this.http.get(url, { responseType: 'blob' }).subscribe({
+      next: (blob) => this.baixarArquivo(blob, filename),
+      error: (err: HttpErrorResponse) => {
+        if ((err.status === 404 || err.status === 405) && indiceUrl < this.urlGerarPdfCandidatas.length - 1) {
+          this.tentarGerarPdf(indiceUrl + 1, filename);
+          return;
+        }
+
+        this.toast.erro(this.extrairMensagemErro(err, 'ERRO AO GERAR PDF'));
+      }
+    });
+  }
+
+  private baixarArquivo(blob: Blob, filename: string): void {
+    const url = URL.createObjectURL(blob);
+    const anchor = document.createElement('a');
+    anchor.href = url;
+    anchor.download = filename;
+    anchor.click();
+    URL.revokeObjectURL(url);
+  }
+
+  private extrairMensagemErro(err: HttpErrorResponse, fallback: string): string {
+    const body = err?.error;
+    if (typeof body === 'string' && body.trim()) return body.trim();
+    if (body?.message && typeof body.message === 'string') return body.message;
+    if (body?.erro && typeof body.erro === 'string') return body.erro;
+    if (err?.message) return err.message;
+    return fallback;
   }
 }

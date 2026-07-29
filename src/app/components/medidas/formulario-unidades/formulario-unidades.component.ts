@@ -36,7 +36,7 @@ export class FormularioUnidadesComponent implements OnInit {
   protected medidaParaEditar: any = null;
 
   private readonly urlUnidades = `${environment.API}ficha-tecnica/unidades-medida`;
-  private readonly urlGerarPdf = `${environment.API}ficha-tecnica/unidades-medida/gerar-pdf-detalhe`;
+  private readonly urlGerarPdfDetalheBase = `${environment.API}ficha-tecnica/unidades-medida/relatorios`;
 
   constructor(
     private fb: FormBuilder,
@@ -120,27 +120,38 @@ export class FormularioUnidadesComponent implements OnInit {
   onImprimir(): void {
     if (!this.medidaParaEditar) return;
 
-    this.http.get(`${this.urlGerarPdf}/${this.medidaParaEditar.codigo}`, { responseType: 'blob' }).subscribe({
-      next: (blob) => {
-        const now  = new Date();
-        const aaaa = now.getFullYear().toString();
-        const mm   = (now.getMonth() + 1).toString().padStart(2, '0');
-        const dd   = now.getDate().toString().padStart(2, '0');
-        const hh   = now.getHours().toString().padStart(2, '0');
-        const min  = now.getMinutes().toString().padStart(2, '0');
-        const ss   = now.getSeconds().toString().padStart(2, '0');
-        const filename = `detalhe-medida-${aaaa}${mm}${dd}_${hh}${min}${ss}.pdf`;
+    const siglaBruta = this.form.get('sigla')?.value ?? this.medidaParaEditar.sigla;
+    const sigla = typeof siglaBruta === 'string' ? siglaBruta.trim() : '';
+    if (!sigla) {
+      this.toast.aviso('Sigla da unidade de medida não informada.');
+      return;
+    }
 
-        const url = URL.createObjectURL(blob);
-        const anchor = document.createElement('a');
-        anchor.href = url;
-        anchor.download = filename;
-        anchor.click();
-        URL.revokeObjectURL(url);
-      },
-      error: () => {
-        this.toast.erro('ERRO AO GERAR PDF');
+    const now = new Date();
+    const aaaa = now.getFullYear().toString();
+    const mm   = (now.getMonth() + 1).toString().padStart(2, '0');
+    const dd   = now.getDate().toString().padStart(2, '0');
+    const hh   = now.getHours().toString().padStart(2, '0');
+    const min  = now.getMinutes().toString().padStart(2, '0');
+    const ss   = now.getSeconds().toString().padStart(2, '0');
+    const filename = `detalhe-medida-${aaaa}${mm}${dd}_${hh}${min}${ss}.pdf`;
+    const siglaCodificada = encodeURIComponent(sigla);
+    const endpoint = `${this.urlGerarPdfDetalheBase}/${siglaCodificada}/detalhe`;
+
+    this.http.get(endpoint, { responseType: 'blob' }).subscribe({
+      next: (blob) => this.baixarArquivo(blob, filename),
+      error: (err) => {
+        this.toast.erro(this.extrairMensagemErro(err, 'ERRO AO GERAR PDF'));
       }
     });
+  }
+
+  private baixarArquivo(blob: Blob, filename: string): void {
+    const url = URL.createObjectURL(blob);
+    const anchor = document.createElement('a');
+    anchor.href = url;
+    anchor.download = filename;
+    anchor.click();
+    URL.revokeObjectURL(url);
   }
 }

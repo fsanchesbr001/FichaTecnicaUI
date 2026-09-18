@@ -99,3 +99,4 @@ For more information on using the Angular CLI, including detailed command refere
 - 1.0.36 - Melhorias no layout do formulário de Produto e exibição de imagem.
 - 1.0.37 - Adicionado Guards e melhoria de formatação numérica.
 - 1.0.38 - Corrigindo chamadas de relatorios de unidade de medida.
+- 1.0.39 - Melhorias de layout e chamadas backend.

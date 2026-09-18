@@ -11,6 +11,7 @@ import { HttpClient } from '@angular/common/http';
 import { NgxMaskDirective, provideNgxMask } from 'ngx-mask';
 import { environment } from '../../../../../../environments/environment';
 import { ToastService } from '../../../../services/toast.service';
+import { ApiErrorService } from '../../../../services/api-error.service';
 
 export interface ItemEstoque {
   codigo: number;
@@ -61,6 +62,7 @@ export class FormularioItensProdutoComponent implements OnInit {
     private fb: FormBuilder,
     private http: HttpClient,
     private toast: ToastService,
+    private apiErrorService: ApiErrorService,
     public dialogRef: MatDialogRef<FormularioItensProdutoComponent>,
     @Inject(MAT_DIALOG_DATA) public data: DialogItensProdutoData,
   ) {
@@ -116,11 +118,11 @@ export class FormularioItensProdutoComponent implements OnInit {
     const raw = this.form.getRawValue();
     const payload = [
       {
-        cdItem:          raw.item,
-        cdProduto:       this.data.codigoProduto,
-        qtdItem:         this.converterParaNumero(raw.quantidade),
+        cdItem: raw.item,
+        cdProduto: this.data.codigoProduto,
+        qtdItem: this.converterParaNumero(raw.quantidade),
         cdUnidadeMedida: raw.medida,
-        vlrItem:         0.00,
+        vlrItem: 0.00,
       }
     ];
 
@@ -132,11 +134,7 @@ export class FormularioItensProdutoComponent implements OnInit {
       },
       error: (err) => {
         this.salvando = false;
-        const body = err?.error;
-        const msg = (typeof body === 'string' && body.trim())
-          ? body.trim()
-          : (body?.message ?? 'ERRO DE CHAMADA HTTP');
-        this.toast.erro(msg);
+        this.toast.erro(this.apiErrorService.extrairMensagem(err, 'Erro ao adicionar item ao produto.'));
       }
     });
   }
@@ -145,4 +143,3 @@ export class FormularioItensProdutoComponent implements OnInit {
     this.dialogRef.close(false);
   }
 }
-

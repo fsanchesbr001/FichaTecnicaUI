@@ -10,16 +10,19 @@ import { CommonModule } from '@angular/common';
 import { environment } from '../../../../../../environments/environment';
 import { DialogoConfirmacaoComponent } from '../../../shared/dialogo-confirmacao/dialogo-confirmacao.component';
 import { ToastService } from '../../../../services/toast.service';
+import { ApiErrorService } from '../../../../services/api-error.service';
 import { FormularioItensProdutoComponent } from '../formulario-itens-produto/formulario-itens-produto.component';
 
 export interface ItemProduto {
   codigo?: number;
   cdItem?: number;
   idItem?: number;
+  itemId?: number;
   nomeProduto: string;
   nomeItem: string;
   qtdeItem: number;
   cdUnidade: number;
+  unidadeMedidaId?: number;
   valorItem: string;
 }
 
@@ -62,6 +65,7 @@ export class ListaItensProdutoComponent implements AfterViewInit, OnChanges {
     private http: HttpClient,
     private dialog: MatDialog,
     private toast: ToastService,
+    private apiErrorService: ApiErrorService,
   ) {}
 
   ngAfterViewInit(): void {
@@ -101,7 +105,7 @@ export class ListaItensProdutoComponent implements AfterViewInit, OnChanges {
   }
 
   private obterIdItem(itemProduto: ItemProduto): number | null {
-    return itemProduto.cdItem ?? itemProduto.idItem ?? itemProduto.codigo ?? null;
+    return itemProduto.cdItem ?? itemProduto.idItem ?? itemProduto.itemId ?? itemProduto.codigo ?? null;
   }
 
   private normalizarRespostaItens(dados: any): ItemProduto[] {
@@ -125,14 +129,14 @@ export class ListaItensProdutoComponent implements AfterViewInit, OnChanges {
 
         this.valorItensAtualizado.emit(this.calcularTotalItens(itens));
       },
-      error: () => {
+      error: (err) => {
         this.dataSource.data = [];
         if (this.paginator) {
           this.dataSource.paginator = this.paginator;
           this.paginator.firstPage();
         }
         this.valorItensAtualizado.emit(0);
-        this.toast.erro('ERRO DE CHAMADA HTTP');
+        this.toast.erro(this.apiErrorService.extrairMensagem(err, 'Erro ao carregar itens do produto.'));
       }
     });
   }
@@ -162,11 +166,7 @@ export class ListaItensProdutoComponent implements AfterViewInit, OnChanges {
         this.carregarItens();
       },
       error: (err) => {
-        const mensagem: string =
-          (typeof err?.error === 'string' && err.error.trim())
-            ? err.error.trim()
-            : (err?.message ?? 'ERRO AO EXCLUIR ITEM DO PRODUTO.');
-        this.toast.erro(mensagem);
+        this.toast.erro(this.apiErrorService.extrairMensagem(err, 'ERRO AO EXCLUIR ITEM DO PRODUTO.'));
       }
     });
   }

@@ -50,7 +50,7 @@ export interface GraficoPrecoResponse {
   imports: [CommonModule],
   template: `
     <div class="grafico-container">
-      <h4 class="grafico-titulo" [style.display]="dados ? 'block' : 'none'">{{ dados?.titulo }}</h4>
+      <h4 class="grafico-titulo" [style.display]="dados ? 'block' : 'none'">{{ tituloGrafico }}</h4>
 
       <!-- canvas sempre presente no DOM; exibido só quando há dados -->
       <canvas #chartCanvas
@@ -99,6 +99,10 @@ export class GraficoPrecosItemComponent implements OnChanges, OnDestroy {
 
   private readonly urlGrafico = `${environment.API}ficha-tecnica/historico-itens/grafico-precos`;
 
+  get tituloGrafico(): string {
+    return this.normalizarTextoCorrompido(this.dados?.titulo ?? '');
+  }
+
   constructor(
     private http: HttpClient,
     private cdr: ChangeDetectorRef,
@@ -122,10 +126,14 @@ export class GraficoPrecosItemComponent implements OnChanges, OnDestroy {
 
     this.http.get<GraficoPrecoResponse>(`${this.urlGrafico}/${this.itemCodigo}`).subscribe({
       next: (resp) => {
-        this.dados = resp;
+        this.dados = {
+          ...resp,
+          titulo: this.normalizarTextoCorrompido(resp.titulo),
+          nomeItem: this.normalizarTextoCorrompido(resp.nomeItem),
+        };
         this.carregando = false;
         this.cdr.detectChanges();          // garante que o canvas está visível
-        this.construirChart(resp);
+        this.construirChart(this.dados);
       },
       error: () => {
         this.carregando = false;
@@ -194,6 +202,31 @@ export class GraficoPrecosItemComponent implements OnChanges, OnDestroy {
     return this.chart?.toBase64Image() ?? null;
   }
 
+  private normalizarTextoCorrompido(valor: string): string {
+    if (!valor) return '';
+
+    return valor
+      .replace(/Ã§/g, 'ç')
+      .replace(/Ã£/g, 'ã')
+      .replace(/Ã¡/g, 'á')
+      .replace(/Ã /g, 'à')
+      .replace(/Ã¢/g, 'â')
+      .replace(/Ãª/g, 'ê')
+      .replace(/Ã©/g, 'é')
+      .replace(/Ã­/g, 'í')
+      .replace(/Ã³/g, 'ó')
+      .replace(/Ã´/g, 'ô')
+      .replace(/Ãµ/g, 'õ')
+      .replace(/Ãº/g, 'ú')
+      .replace(/Ã¼/g, 'ü')
+      .replace(/â€“/g, '–')
+      .replace(/â€”/g, '—')
+      .replace(/â€˜/g, '‘')
+      .replace(/â€™/g, '’')
+      .replace(/â€œ/g, '“')
+      .replace(/â€/g, '”');
+  }
+
   private destruirChart(): void {
     if (this.chart) {
       this.chart.destroy();
@@ -201,4 +234,3 @@ export class GraficoPrecosItemComponent implements OnChanges, OnDestroy {
     }
   }
 }
-

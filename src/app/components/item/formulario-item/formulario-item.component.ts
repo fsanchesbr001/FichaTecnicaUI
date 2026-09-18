@@ -10,6 +10,7 @@ import { Router, Navigation } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../../../environments/environment';
 import { ToastService } from '../../../services/toast.service';
+import { ApiErrorService } from '../../../services/api-error.service';
 import { GraficoPrecosItemComponent } from '../grafico-precos-item/grafico-precos-item.component';
 
 export interface UnidadeMedida {
@@ -70,6 +71,7 @@ export class FormularioItemComponent implements OnInit {
     private router: Router,
     private http: HttpClient,
     private toast: ToastService,
+    private apiErrorService: ApiErrorService,
   ) {
     const nav: Navigation | null = this.router.getCurrentNavigation();
     this.itemParaEditar = nav?.extras?.state?.['item'] ?? null;
@@ -122,6 +124,10 @@ export class FormularioItemComponent implements OnInit {
       unidade: unidadeId,
       valor:   this.formatarMoedaSemPrefixo(Number(valorNumerico) || 0),
     });
+  }
+
+  private obterUnidadeSelecionada(codigo: number): UnidadeMedida | null {
+    return this.unidades.find(unidade => unidade.codigo === codigo) ?? null;
   }
 
   private converterParaNumero(mascara: string | number | null | undefined): number {
@@ -199,11 +205,7 @@ export class FormularioItemComponent implements OnInit {
   }
 
   private extrairMensagemErro(err: any, fallback = 'ERRO DE CHAMADA HTTP'): string {
-    const body = err?.error;
-    if (typeof body === 'string' && body.trim()) return body.trim();
-    if (body?.message && typeof body.message === 'string') return body.message;
-    if (body?.erro   && typeof body.erro   === 'string') return body.erro;
-    return fallback;
+    return this.apiErrorService.extrairMensagem(err, fallback);
   }
 
   onSalvar(): void {
@@ -221,9 +223,14 @@ export class FormularioItemComponent implements OnInit {
 
   private registrarItem(): void {
     const raw = this.form.getRawValue();
+    const unidadeSelecionada = this.obterUnidadeSelecionada(Number(raw.unidade));
     const payload = {
       nome: raw.nome,
-      unidadeMedida: { codigo: raw.unidade },
+      unidadeMedida: {
+        codigo: Number(raw.unidade),
+        nome: unidadeSelecionada?.nome ?? '',
+        sigla: unidadeSelecionada?.sigla ?? '',
+      },
       valor: this.converterParaNumero(raw.valor)
     };
     this.http.post(this.urlItens, payload).subscribe({
@@ -240,9 +247,14 @@ export class FormularioItemComponent implements OnInit {
 
   private atualizarItem(): void {
     const raw = this.form.getRawValue();
+    const unidadeSelecionada = this.obterUnidadeSelecionada(Number(raw.unidade));
     const payload = {
       nome: raw.nome,
-      unidadeMedida: { codigo: raw.unidade },
+      unidadeMedida: {
+        codigo: Number(raw.unidade),
+        nome: unidadeSelecionada?.nome ?? '',
+        sigla: unidadeSelecionada?.sigla ?? '',
+      },
       valor: this.converterParaNumero(raw.valor)
     };
     this.http.put(`${this.urlItens}/${this.itemParaEditar.codigo}`, payload).subscribe({

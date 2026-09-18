@@ -10,6 +10,7 @@ import { HttpClient } from '@angular/common/http';
 import { catchError, of, switchMap } from 'rxjs';
 import { environment } from '../../../../../environments/environment';
 import { ToastService } from '../../../services/toast.service';
+import { ApiErrorService } from '../../../services/api-error.service';
 import { ListaItensProdutoComponent } from '../item-produto/lista-itens-produto/lista-itens-produto.component';
 import { GraficoPizzaProdutoComponent } from '../grafico-pizza-produto/grafico-pizza-produto.component';
 import { SeletorArquivoImagemComponent } from '../../shared/seletor-arquivo-imagem/seletor-arquivo-imagem.component';
@@ -58,6 +59,7 @@ export class FormularioProdutosComponent implements OnInit, OnDestroy {
     private router: Router,
     private http: HttpClient,
     private toast: ToastService,
+    private apiErrorService: ApiErrorService,
   ) {
     const nav: Navigation | null = this.router.getCurrentNavigation();
     this.produtoParaEditar = nav?.extras?.state?.['produto'] ?? null;
@@ -130,11 +132,7 @@ export class FormularioProdutosComponent implements OnInit, OnDestroy {
   }
 
   private extrairMensagemErro(err: any, fallback = 'ERRO DE CHAMADA HTTP'): string {
-    const body = err?.error;
-    if (typeof body === 'string' && body.trim()) return body.trim();
-    if (body?.message && typeof body.message === 'string') return body.message;
-    if (body?.erro   && typeof body.erro   === 'string') return body.erro;
-    return fallback;
+    return this.apiErrorService.extrairMensagem(err, fallback);
   }
 
   /** Converte "1.234,56" (PT-BR) → 1234.56 (formato numérico para o backend) */
@@ -223,7 +221,7 @@ export class FormularioProdutosComponent implements OnInit, OnDestroy {
   private registrarProduto(): void {
     this.http.post<any>(this.urlProdutos, this.montarPayload()).pipe(
       switchMap((produto) => {
-        const idProduto = produto?.codigo ?? produto?.id;
+        const idProduto = produto?.codigo ?? produto?.id ?? produto?.produtoId;
         if (this.arquivoImagemSelecionado && idProduto) {
           return this.uploadImagem(idProduto).pipe(
             catchError(() => {
@@ -274,7 +272,7 @@ export class FormularioProdutosComponent implements OnInit, OnDestroy {
   private uploadImagem(idProduto: number): ReturnType<HttpClient['post']> {
     const formData = new FormData();
     formData.append('file', this.arquivoImagemSelecionado!, this.arquivoImagemSelecionado!.name);
-    return this.http.post(`${this.urlProdutos}/${idProduto}/imagem/upload`, formData);
+    return this.http.post(`${this.urlProdutos}/${idProduto}/imagem`, formData);
   }
 
   /** Normaliza o campo monetário ao sair: garante sempre 2 casas decimais */

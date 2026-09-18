@@ -63,6 +63,10 @@ export class GraficoPizzaProdutoComponent implements OnChanges, OnDestroy {
   private chart: Chart | null = null;
   private readonly urlGraficoPizza = `${environment.API}ficha-tecnica/produtos`;
 
+  get tituloGrafico(): string {
+    return `Composicao de Custo - ${this.dados?.nomeProduto ?? ''}`.trim();
+  }
+
   constructor(
     private http: HttpClient,
     private cdr: ChangeDetectorRef,

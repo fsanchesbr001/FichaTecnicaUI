@@ -10,6 +10,8 @@ import {AuthService} from '../../services/auth.service';
 import {JwtService} from '../../services/jwt.service';
 import {ToastService} from '../../services/toast.service';
 import {HttpErrorResponse} from '@angular/common/http';
+import {ApiErrorService} from '../../services/api-error.service';
+import {UsuarioResponse} from '../../model/usuario.model';
 
 @Component({
   selector: 'app-solicitar-token',
@@ -50,7 +52,8 @@ export class SolicitarTokenComponent implements OnInit {
     private route: ActivatedRoute,
     private authService: AuthService,
     private jwtService: JwtService,
-    private toast: ToastService
+    private toast: ToastService,
+    private apiErrorService: ApiErrorService
   ) {}
 
   ngOnInit(): void {
@@ -81,16 +84,16 @@ export class SolicitarTokenComponent implements OnInit {
     // Passo 1: Iniciar recuperação de senha — obtém token temporário
     this.authService.iniciarRecuperacaoSenha(email).subscribe({
       next: (response) => {
-        // Armazena o token temporário para que o interceptor injete nos próximos requests
-        if (response?.jwt) {
-          this.jwtService.setToken(response.jwt);
+        const tokenTemporario = response?.token?.trim() || response?.jwt?.trim() || '';
+        if (tokenTemporario) {
+          this.jwtService.setToken(tokenTemporario);
         }
 
         // Passo 2: Buscar dados do usuário (Authorization header injetado automaticamente)
         this.authService.buscarUsuarioPorEmail(email).subscribe({
-          next: (usuario: any) => {
+          next: (usuario: UsuarioResponse) => {
             // Verifica bloqueio administrativo
-            if (usuario?.bloqueado_admin === true) {
+            if (usuario?.bloqueadoAdmin === true) {
               this.realizarLogoutERedirecionarComErro('Acesso bloqueado administrativamente. Entre em contato com o suporte.');
               return;
             }
@@ -104,21 +107,21 @@ export class SolicitarTokenComponent implements OnInit {
               },
               error: (erro: HttpErrorResponse) => {
                 this.isSolicitarDisabled = false;
-                const mensagem = erro?.error?.message || 'Erro ao enviar e-mail. Tente novamente.';
+                const mensagem = this.apiErrorService.extrairMensagem(erro, 'Erro ao enviar e-mail. Tente novamente.');
                 this.toast.erro(mensagem);
               }
             });
           },
           error: (erro: HttpErrorResponse) => {
             // Erro ao buscar usuário — mesmo procedimento do Sair
-            const mensagem = erro?.error?.message || 'Usuário não encontrado ou erro ao validar dados.';
+            const mensagem = this.apiErrorService.extrairMensagem(erro, 'Usuário não encontrado ou erro ao validar dados.');
             this.realizarLogoutERedirecionarComErro(mensagem);
           }
         });
       },
       error: (erro: HttpErrorResponse) => {
         this.isSolicitarDisabled = false;
-        const mensagem = erro?.error?.message || 'Erro ao iniciar recuperação de senha.';
+        const mensagem = this.apiErrorService.extrairMensagem(erro, 'Erro ao iniciar recuperação de senha.');
         this.toast.erro(mensagem);
         this.router.navigate(['']);
       }
@@ -149,5 +152,4 @@ export class SolicitarTokenComponent implements OnInit {
     this.router.navigate(['/recuperar-senha'], { queryParams: { email: btoa(email) } });
   }
 }
-
 

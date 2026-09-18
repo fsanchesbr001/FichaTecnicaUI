@@ -11,19 +11,8 @@ import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../../../environments/environment';
 import { DialogoConfirmacaoComponent } from '../../shared/dialogo-confirmacao/dialogo-confirmacao.component';
 import { ToastService } from '../../../services/toast.service';
-
-export interface Usuario {
-  nome: string;
-  email: string;
-  cpf: string;
-  role: string;
-  dataExpiracaoSenha: string | null;
-  tentativas: number;
-  primeiro_acesso: boolean;
-  bloqueado_admin: boolean;
-  bloqueado_tentativas: boolean;
-  bloqueado_expiracao: boolean;
-}
+import { ApiErrorService } from '../../../services/api-error.service';
+import { UsuarioResponse } from '../../../model/usuario.model';
 
 @Component({
   selector: 'app-lista-usuarios',
@@ -40,15 +29,16 @@ export interface Usuario {
   styleUrls: ['./lista-usuarios.component.css']
 })
 export class ListaUsuariosComponent implements AfterViewInit, OnInit {
-  @Input() usuarios: Usuario[] = [];
+  @Input() usuarios: UsuarioResponse[] = [];
   displayedColumns = ['nome', 'email', 'role', 'acoes'];
 
-  dataSource = new MatTableDataSource<Usuario>(this.usuarios);
+  dataSource = new MatTableDataSource<UsuarioResponse>(this.usuarios);
 
   @ViewChild(MatPaginator) paginator!: MatPaginator;
 
-  private readonly urlListarUsuarios = `${environment.API}ficha-tecnica/usuarios/listar-todos-usuarios`;
-  private readonly urlExcluirUsuario  = `${environment.API}ficha-tecnica/usuarios/excluir-usuario`;
+  private readonly urlUsuarios = `${environment.API}ficha-tecnica/usuarios`;
+  private readonly urlListarUsuarios = this.urlUsuarios;
+  private readonly urlExcluirUsuario  = this.urlUsuarios;
   private readonly urlGerarPdf        = `${environment.API}ficha-tecnica/relatorios/gerar-pdf`;
 
   constructor(
@@ -56,6 +46,7 @@ export class ListaUsuariosComponent implements AfterViewInit, OnInit {
     private http: HttpClient,
     private dialog: MatDialog,
     private toast: ToastService,
+    private apiErrorService: ApiErrorService,
   ) {}
 
   ngOnInit(): void {
@@ -67,24 +58,24 @@ export class ListaUsuariosComponent implements AfterViewInit, OnInit {
   }
 
   carregarUsuarios(): void {
-    this.http.get<Usuario[]>(this.urlListarUsuarios).subscribe({
+    this.http.get<UsuarioResponse[]>(this.urlListarUsuarios).subscribe({
       next: (dados) => {
         this.dataSource.data = dados ?? [];
       },
-      error: () => {
+      error: (err) => {
         this.dataSource.data = [];
-        this.toast.erro('ERRO DE CHAMADA HTTP');
+        this.toast.erro(this.apiErrorService.extrairMensagem(err, 'Erro ao carregar usuários.'));
       }
     });
   }
 
-  onEditar(usuario: Usuario): void {
+  onEditar(usuario: UsuarioResponse): void {
     this.router.navigate(['/principal/formulario-usuarios'], {
       state: { usuario }
     });
   }
 
-  onExcluir(usuario: Usuario): void {
+  onExcluir(usuario: UsuarioResponse): void {
     this.dialog.open(DialogoConfirmacaoComponent, {
       width: '360px',
       data: {
@@ -95,14 +86,14 @@ export class ListaUsuariosComponent implements AfterViewInit, OnInit {
     });
   }
 
-  private excluirUsuario(usuario: Usuario): void {
-    this.http.post(this.urlExcluirUsuario, { email: usuario.email }).subscribe({
+  private excluirUsuario(usuario: UsuarioResponse): void {
+    this.http.delete(`${this.urlExcluirUsuario}/${encodeURIComponent(usuario.email)}`).subscribe({
       next: () => {
         this.toast.sucesso('Usuário excluído com sucesso.');
         this.carregarUsuarios();
       },
-      error: () => {
-        this.toast.erro('ERRO AO EXCLUIR USUÁRIO.');
+      error: (err) => {
+        this.toast.erro(this.apiErrorService.extrairMensagem(err, 'ERRO AO EXCLUIR USUÁRIO.'));
       }
     });
   }

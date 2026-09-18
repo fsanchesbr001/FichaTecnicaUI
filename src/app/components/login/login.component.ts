@@ -8,9 +8,11 @@ import {MatButton} from "@angular/material/button";
 import {RouterLink, Router} from "@angular/router";
 import {AuthService} from "../../services/auth.service";
 import {JwtService} from "../../services/jwt.service";
-import {Usuario} from '../../model/usuario.model';
+import {UsuarioLogin} from '../../model/usuario.model';
 import {HttpErrorResponse} from '@angular/common/http';
 import {ToastService} from '../../services/toast.service';
+import {ApiErrorService} from '../../services/api-error.service';
+import {TokenJwt} from '../../model/tokenJwt.model';
 @Component({
   selector: 'app-login',
   imports: [
@@ -36,7 +38,7 @@ import {ToastService} from '../../services/toast.service';
   styleUrl: './login.component.css'
 })
 export class LoginComponent {
-  usuario! :Usuario;
+  usuario!: UsuarioLogin;
 
   readonly senhaErroPattern = 'Senha deve iniciar com letra ou número, conter maiúscula, minúscula, número e caractere especial (!@#$%^&*()-_+=[]{};:,.<>?/), sem espaços';
   loginForm = new FormGroup({
@@ -58,8 +60,9 @@ export class LoginComponent {
     private router: Router,
     private authService: AuthService,
     private jwtService: JwtService,
+    private apiErrorService: ApiErrorService,
   ) {
-    this.usuario = new Usuario();
+    this.usuario = { login: '', senha: '' };
   }
 
 
@@ -87,11 +90,11 @@ export class LoginComponent {
   }
 
   private extrairMensagemErro(erro: HttpErrorResponse): string {
-    if (typeof erro?.error === 'string') {
-      return erro.error;
-    }
+    return this.apiErrorService.extrairMensagem(erro, 'Erro ao realizar login. Verifique suas credenciais.');
+  }
 
-    return erro?.error?.jwt || erro?.error?.message || 'Erro ao realizar login. Verifique suas credenciais.';
+  private obterTokenRetorno(token: TokenJwt | null | undefined): string {
+    return token?.token?.trim() || token?.jwt?.trim() || '';
   }
 
   private mostrarErroBloqueio(message: string): void {
@@ -100,36 +103,20 @@ export class LoginComponent {
   }
 
   onSubmit() {
-    console.log('=== FORM SUBMIT ===');
-    console.log('Formulário válido?', this.loginForm.valid);
-    console.log('Valores do formulário:', this.loginForm.value);
-
     if (this.loginForm.valid) {
       const emailValue = this.loginForm.get('email')?.value;
       const passwordValue = this.loginForm.get('password')?.value;
-
-      console.log('Email:', emailValue);
-      console.log('Senha:', passwordValue ? '***' : 'vazia');
 
       if (emailValue && passwordValue) {
         this.usuario.login = emailValue;
         this.usuario.senha = passwordValue;
 
-        console.log('Chamando authService.login()...');
-
         this.authService.login(this.usuario).subscribe(
           {
             next: (token)=>{
-              console.log('=== FLUXO NEXT (SUCESSO) ===');
-              console.log('Token completo:', JSON.stringify(token));
-              console.log('token.jwt:', token?.jwt);
-
-              const jwtMessage = token?.jwt?.trim() || '';
-              console.log('jwtMessage após trim:', jwtMessage);
-              console.log('É código de bloqueio?', this.isCodigoBloqueio(jwtMessage));
+              const jwtMessage = this.obterTokenRetorno(token);
 
               if (jwtMessage && this.isPrimeiroAcesso(jwtMessage)) {
-                console.log('✅ Redirecionando para Primeiro Acesso (NEXT)');
                 this.router.navigate(['/solicitar-token'], {
                   queryParams: { email: btoa(emailValue), primeiroAcesso: true }
                 });
@@ -137,30 +124,20 @@ export class LoginComponent {
               }
 
               if (jwtMessage && this.isCodigoBloqueio(jwtMessage)) {
-                console.log('✅ Exibindo toast de bloqueio (NEXT)');
                 this.mostrarErroBloqueio(jwtMessage);
                 return;
               }
 
-              // Armazenar o token JWT
-              if (token.jwt) {
-                this.jwtService.setToken(token.jwt);
+              if (jwtMessage) {
+                this.jwtService.setToken(jwtMessage);
               }
               this.toast.sucesso('Login realizado com sucesso!');
-               this.router.navigate(['/principal/lista-produtos']);
+              this.router.navigate(['/principal/lista-produtos']);
             },
             error: (erro:HttpErrorResponse)=>{
-              console.log('=== FLUXO ERROR ===');
-              console.error('Erro completo:', erro);
-              console.log('erro.error:', erro?.error);
-              console.log('Tipo de erro.error:', typeof erro?.error);
-
               const errorMessage = this.extrairMensagemErro(erro);
-              console.log('errorMessage extraída:', errorMessage);
-              console.log('É código de bloqueio?', this.isCodigoBloqueio(errorMessage));
 
               if (this.isPrimeiroAcesso(errorMessage)) {
-                console.log('✅ Redirecionando para Primeiro Acesso (ERROR)');
                 this.router.navigate(['/solicitar-token'], {
                   queryParams: { email: btoa(emailValue), primeiroAcesso: true }
                 });
@@ -168,19 +145,14 @@ export class LoginComponent {
               }
 
               if (this.isCodigoBloqueio(errorMessage)) {
-                console.log('✅ Exibindo toast de bloqueio (ERROR)');
                 this.mostrarErroBloqueio(errorMessage);
               } else {
-                console.log('❌ Mostrando toast de erro');
                 this.toast.erro(errorMessage);
               }
             }
           });
-      } else {
-        console.warn('Email ou senha vazios');
       }
     } else {
-      console.warn('Formulário inválido');
       this.toast.aviso('Por favor, corrija os erros no formulário.');
     }
   }

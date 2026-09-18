@@ -1,7 +1,5 @@
 <div class="grafico-container">
-  <h4 class="grafico-titulo" [style.display]="dados ? 'block' : 'none'">
-    Composição de Custo - {{ dados?.nomeProduto }}
-  </h4>
+  <h4 class="grafico-titulo" [style.display]="dados ? 'block' : 'none'">{{ tituloGrafico }}</h4>
   <div class="grafico-subtitulo" [style.display]="dados ? 'block' : 'none'">
     Total de Itens: {{ dados?.valorTotal }}
   </div>
@@ -14,4 +12,3 @@
   <div *ngIf="carregando" class="grafico-loading">Carregando gráfico...</div>
   <div *ngIf="erro" class="grafico-erro">{{ erro }}</div>
 </div>
-

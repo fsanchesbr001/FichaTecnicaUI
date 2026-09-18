@@ -13,6 +13,7 @@ import { ToastService } from '../../services/toast.service';
 import { AuthService } from '../../services/auth.service';
 import { JwtService } from '../../services/jwt.service';
 import { HttpErrorResponse } from '@angular/common/http';
+import { ApiErrorService } from '../../services/api-error.service';
 
 @Component({
   selector: 'app-recuperar-senha',
@@ -81,7 +82,8 @@ export class RecuperarSenhaComponent implements OnInit {
               private route: ActivatedRoute,
               private router: Router,
               private authService: AuthService,
-              private jwtService: JwtService) {}
+              private jwtService: JwtService,
+              private apiErrorService: ApiErrorService) {}
 
   ngOnInit(): void {
     const emailParam = this.route.snapshot.queryParamMap.get('email');
@@ -147,7 +149,7 @@ export class RecuperarSenhaComponent implements OnInit {
         this.realizarLogoutERedirecionar();
       },
       error: (erro: HttpErrorResponse) => {
-        const mensagem = erro?.error?.message || 'Erro ao atualizar a senha. Tente novamente.';
+        const mensagem = this.apiErrorService.extrairMensagem(erro, 'Erro ao atualizar a senha. Tente novamente.');
         this.toast.erro(mensagem);
         this.realizarLogoutERedirecionar();
       }

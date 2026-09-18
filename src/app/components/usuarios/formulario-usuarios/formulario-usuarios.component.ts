@@ -17,6 +17,8 @@ import { Router, Navigation } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../../../environments/environment';
 import { ToastService } from '../../../services/toast.service';
+import { ApiErrorService } from '../../../services/api-error.service';
+import { UsuarioAtualizacaoRequest, UsuarioRegistroRequest, UsuarioResponse } from '../../../model/usuario.model';
 
 registerLocaleData(localePt);
 
@@ -71,11 +73,11 @@ export const MY_DATE_FORMATS = {
   styleUrls: ['./formulario-usuarios.component.css'],
 })
 export class FormularioUsuariosComponent implements OnInit {
-  @Input() usuario: any;
+  @Input() usuario: UsuarioResponse | null = null;
   form!: FormGroup;
   roles: Role[] = [];
   salvando = false;
-  protected usuarioParaEditar: any = null;
+  protected usuarioParaEditar: UsuarioResponse | null = null;
   private readonly destroyRef = inject(DestroyRef);
   private primeiroAcessoVeioDoDb = false;
 
@@ -84,10 +86,11 @@ export class FormularioUsuariosComponent implements OnInit {
     return this.primeiroAcessoVeioDoDb;
   }
 
-  private readonly urlRoles            = `${environment.API}ficha-tecnica/usuarios/roles`;
-  private readonly urlRegistrarUsuario = `${environment.API}ficha-tecnica/usuarios/registrar-usuario`;
-  private readonly urlAtualizarUsuario = `${environment.API}ficha-tecnica/usuarios/atualizar-usuario`;
-  private readonly urlPrimeiroAcesso   = `${environment.API}ficha-tecnica/usuarios/primeiro-acesso`;
+  private readonly urlUsuarios         = `${environment.API}ficha-tecnica/usuarios`;
+  private readonly urlRoles            = `${this.urlUsuarios}/roles`;
+  private readonly urlRegistrarUsuario = this.urlUsuarios;
+  private readonly urlAtualizarUsuario = this.urlUsuarios;
+  private readonly urlPrimeiroAcesso   = `${this.urlUsuarios}/primeiro-acesso`;
   private readonly urlGerarPdf         = `${environment.API}ficha-tecnica/relatorios/gerar-pdf`;
 
   constructor(
@@ -95,6 +98,7 @@ export class FormularioUsuariosComponent implements OnInit {
     private router: Router,
     private http: HttpClient,
     private toast: ToastService,
+    private apiErrorService: ApiErrorService,
   ) {
     // Recupera o usuário passado via state na navegação (fluxo de edição)
     const nav: Navigation | null = this.router.getCurrentNavigation();
@@ -152,13 +156,10 @@ export class FormularioUsuariosComponent implements OnInit {
     });
   }
 
-  private preencherFormulario(u: any): void {
-    console.log('[preencherFormulario] Dados recebidos:', u);
-
+  private preencherFormulario(u: UsuarioResponse): void {
     const cpfSomenteDigitos = u.cpf ? u.cpf.replace(/\D/g, '') : '';
 
-    // Registra se Primeiro Acesso já veio true do banco (impede salvar nesse caso)
-    this.primeiroAcessoVeioDoDb = u.primeiro_acesso === true || u.primeiro_acesso === 'true';
+    this.primeiroAcessoVeioDoDb = u.primeiroAcesso === true;
 
     // Modo edição: email e CPF não podem ser alterados
     this.form.get('email')?.disable();
@@ -169,10 +170,10 @@ export class FormularioUsuariosComponent implements OnInit {
       email: u.email ?? '',
       cpf: cpfSomenteDigitos,
       role: u.role ?? '',
-      primeiroAcesso: u.primeiro_acesso === true || u.primeiro_acesso === 'true',
-      bloqueioAdm: u.bloqueado_admin === true || u.bloqueado_admin === 'true',
-      bloqueioTentativas: u.bloqueado_tentativas === true || u.bloqueado_tentativas === 'true',
-      bloqueioExpiracao: u.bloqueado_expiracao === true || u.bloqueado_expiracao === 'true',
+      primeiroAcesso: u.primeiroAcesso === true,
+      bloqueioAdm: u.bloqueadoAdmin === true,
+      bloqueioTentativas: u.bloqueadoTentativas === true,
+      bloqueioExpiracao: u.bloqueadoExpiracao === true,
     }, { emitEvent: false });
 
     // Campos disabled precisam ser atualizados diretamente pelo AbstractControl
@@ -275,60 +276,63 @@ export class FormularioUsuariosComponent implements OnInit {
   private registrarUsuario(): void {
     const valores = this.form.getRawValue();
 
-    const payload = {
-      login: valores.email,
-      senha: null,
-      role: valores.role,
+    const payload: UsuarioRegistroRequest = {
       nome: valores.nome,
+      email: valores.email,
       cpf: valores.cpf,
+      role: valores.role,
+      senha: null,
     };
 
     this.http.post(this.urlRegistrarUsuario, payload).subscribe({
       next: () => {
         this.abrirDialogoSucesso('Usuário registrado com sucesso.');
       },
-      error: () => {
+      error: (err) => {
         this.salvando = false;
-        this.toast.erro('ERRO DE CHAMADA HTTP');
+        this.toast.erro(this.apiErrorService.extrairMensagem(err, 'Erro ao registrar usuário.'));
       }
     });
   }
 
   private atualizarUsuario(): void {
     const valores = this.form.getRawValue();
-    const email   = this.usuarioParaEditar.email;
+    const email   = this.usuarioParaEditar?.email;
+    if (!email) {
+      this.salvando = false;
+      this.toast.erro('Não foi possível identificar o usuário para atualização.');
+      return;
+    }
 
-    // 02 — Primeiro Acesso selecionado: chama endpoint específico
     if (valores.primeiroAcesso) {
-      this.http.post(`${this.urlPrimeiroAcesso}/${email}`, {}).subscribe({
+      this.http.post(`${this.urlPrimeiroAcesso}/${encodeURIComponent(email)}`, {}).subscribe({
         next: () => {
           this.abrirDialogoSucesso('Registro atualizado com sucesso.');
         },
-        error: () => {
+        error: (err) => {
           this.salvando = false;
-          this.toast.erro('ERRO DE CHAMADA HTTP');
+          this.toast.erro(this.apiErrorService.extrairMensagem(err, 'Erro ao atualizar usuário.'));
         }
       });
       return;
     }
 
-    // 01 — Fluxo normal de atualização
-    const payload = {
-      bloqueado_admin:       valores.bloqueioAdm,
-      bloqueado_tentativas:  valores.bloqueioTentativas,
-      bloqueado_expiracao:   valores.bloqueioExpiracao,
-      primeiro_acesso:       valores.primeiroAcesso,
-      nome:                  valores.nome,
-      role:                  valores.role,
+    const payload: UsuarioAtualizacaoRequest = {
+      bloqueadoAdmin: valores.bloqueioAdm,
+      bloqueadoTentativas: valores.bloqueioTentativas,
+      bloqueadoExpiracao: valores.bloqueioExpiracao,
+      primeiroAcesso: valores.primeiroAcesso,
+      nome: valores.nome,
+      role: valores.role,
     };
 
-    this.http.put(`${this.urlAtualizarUsuario}/${email}`, payload).subscribe({
+    this.http.put(`${this.urlAtualizarUsuario}/${encodeURIComponent(email)}`, payload).subscribe({
       next: () => {
         this.abrirDialogoSucesso('Registro atualizado com sucesso.');
       },
-      error: () => {
+      error: (err) => {
         this.salvando = false;
-        this.toast.erro('ERRO DE CHAMADA HTTP');
+        this.toast.erro(this.apiErrorService.extrairMensagem(err, 'Erro ao atualizar usuário.'));
       }
     });
   }
@@ -353,10 +357,10 @@ export class FormularioUsuariosComponent implements OnInit {
       cpf:                   valores.cpf,
       role:                  valores.role,
       tentativas:            valores.tentativas,
-      bloqueado_admin:       valores.bloqueioAdm,
-      bloqueado_tentativas:  valores.bloqueioTentativas,
-      bloqueado_expiracao:   valores.bloqueioExpiracao,
-      primeiro_acesso:       valores.primeiroAcesso,
+      bloqueadoAdmin:        valores.bloqueioAdm,
+      bloqueadoTentativas:   valores.bloqueioTentativas,
+      bloqueadoExpiracao:    valores.bloqueioExpiracao,
+      primeiroAcesso:        valores.primeiroAcesso,
       dataExpiracaoSenha:    valores.dataExpiracao
                                ? new Date(valores.dataExpiracao).toISOString()
                                : null,
@@ -379,10 +383,10 @@ export class FormularioUsuariosComponent implements OnInit {
         dataExpiracaoToken:    'Expira Id em',
         tentativas:            'Tentativas Permitidas',
         dataExpiracaoSenha:    'Expira Senha em',
-        bloqueado_admin:       'Bloqueio Administrativo',
-        bloqueado_tentativas:  'Bloqueio Tentativas',
-        bloqueado_expiracao:   'Bloqueio Expiração Senha',
-        primeiro_acesso:       'Primeiro Acesso',
+        bloqueadoAdmin:        'Bloqueio Administrativo',
+        bloqueadoTentativas:   'Bloqueio Tentativas',
+        bloqueadoExpiracao:    'Bloqueio Expiração Senha',
+        primeiroAcesso:        'Primeiro Acesso',
       },
       tipoRelatorio: 'DETALHE',
       orientacao:    'PAISAGEM',
@@ -407,8 +411,8 @@ export class FormularioUsuariosComponent implements OnInit {
         anchor.click();
         URL.revokeObjectURL(url);
       },
-      error: () => {
-        this.toast.erro('ERRO AO GERAR PDF');
+      error: (err) => {
+        this.toast.erro(this.apiErrorService.extrairMensagem(err, 'ERRO AO GERAR PDF'));
       }
     });
   }

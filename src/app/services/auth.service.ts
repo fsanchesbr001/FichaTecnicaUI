@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import {Observable, take} from 'rxjs';
 import {environment} from '../../../environments/environment';
-import {Usuario} from '../model/usuario.model';
+import {UsuarioLogin, UsuarioResponse} from '../model/usuario.model';
 import {TokenJwt} from '../model/tokenJwt.model';
 
 @Injectable({
@@ -10,13 +10,14 @@ import {TokenJwt} from '../model/tokenJwt.model';
 })
 
 export class AuthService {
-  private readonly urlAddress:string = `${environment.API}auth/login`;
-  private readonly logoutUrl:string = `${environment.API}auth/logout`;
+  private readonly authBaseUrl = `${environment.API}auth`;
+  private readonly usuariosBaseUrl = `${environment.API}ficha-tecnica/usuarios`;
+  private readonly loginUrl = `${this.authBaseUrl}/login`;
+  private readonly logoutUrl = `${this.authBaseUrl}/logout`;
+  private readonly loginRecuperacaoUrl = `${environment.API}ficha-tecnica/login-recuperacao-senha`;
+  private readonly enviarEmailUrl = `${environment.API}ficha-tecnica/enviar-email-seguranca`;
+  private readonly trocarSenhaUrl = `${environment.API}ficha-tecnica/trocar-senha`;
   private readonly sitePermitido:string = `${environment.CORS_ORIGIN_ALLOWED}`;
-  private readonly loginRecuperacaoUrl:string = `${environment.API}ficha-tecnica/login-recuperacao-senha`;
-  private readonly buscarUsuarioUrl:string = `${environment.API}ficha-tecnica/usuarios/buscar-usuario`;
-  private readonly enviarEmailUrl:string = `${environment.API}ficha-tecnica/enviar-email-seguranca`;
-  private readonly trocarSenhaUrl:string = `${environment.API}ficha-tecnica/trocar-senha`;
 
   constructor(private http:HttpClient) {}
 
@@ -26,10 +27,13 @@ export class AuthService {
    * @param Objeto Usuario contendo login e senha
    * @returns Observable com o resultado do login, incluindo token JWT em caso de sucesso
    */
-  login(usuario :Usuario): Observable<TokenJwt> {
+  login(usuario :UsuarioLogin): Observable<TokenJwt> {
+    const payload = {
+      login: usuario.login,
+      senha: usuario.senha
+    };
 
-    console.log('=== INICIANDO LOGIN ===');
-    return this.http.post<TokenJwt>(this.urlAddress, usuario,
+    return this.http.post<TokenJwt>(this.loginUrl, payload,
       {headers:{'Content-Type':'application/json',
           'Access-Control-Allow-Origin':`${this.sitePermitido}`,
           'Access-Control-Allow-Headers':'Content-Type'
@@ -58,8 +62,8 @@ export class AuthService {
    * @param email E-mail do usuário
    * @returns Observable com os dados do usuário
    */
-  buscarUsuarioPorEmail(email: string): Observable<any> {
-    return this.http.get<any>(`${this.buscarUsuarioUrl}/${email}`).pipe(take(1));
+  buscarUsuarioPorEmail(email: string): Observable<UsuarioResponse> {
+    return this.http.get<UsuarioResponse>(`${this.usuariosBaseUrl}/${encodeURIComponent(email)}`).pipe(take(1));
   }
 
   /**
@@ -86,4 +90,3 @@ export class AuthService {
     return this.http.post<any>(this.trocarSenhaUrl, payload).pipe(take(1));
   }
 }
-

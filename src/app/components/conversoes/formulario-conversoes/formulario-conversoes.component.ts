@@ -10,11 +10,19 @@ import { Router, Navigation } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../../../environments/environment';
 import { ToastService } from '../../../services/toast.service';
+import { ApiErrorService } from '../../../services/api-error.service';
 
 export interface UnidadeMedida {
   codigo: number;
   nome: string;
   sigla: string;
+}
+
+interface ConversaoRequest {
+  unidadeDe: number;
+  unidadePara: number;
+  operacao: string;
+  valor: number;
 }
 
 const fatorPositivoPtBrValidator: ValidatorFn = (control: AbstractControl): ValidationErrors | null => {
@@ -70,6 +78,7 @@ export class FormularioConversoesComponent implements OnInit {
     private router: Router,
     private http: HttpClient,
     private toast: ToastService,
+    private apiErrorService: ApiErrorService,
   ) {
     const nav: Navigation | null = this.router.getCurrentNavigation();
     this.conversaoParaEditar = nav?.extras?.state?.['conversao'] ?? null;
@@ -174,11 +183,7 @@ export class FormularioConversoesComponent implements OnInit {
   }
 
   private extrairMensagemErro(err: any, fallback = 'ERRO DE CHAMADA HTTP'): string {
-    const body = err?.error;
-    if (typeof body === 'string' && body.trim()) return body.trim();
-    if (body?.message && typeof body.message === 'string') return body.message;
-    if (body?.erro   && typeof body.erro   === 'string') return body.erro;
-    return fallback;
+    return this.apiErrorService.extrairMensagem(err, fallback);
   }
 
   onSalvar(): void {
@@ -195,8 +200,7 @@ export class FormularioConversoesComponent implements OnInit {
   }
 
   private registrarConversao(): void {
-    const raw = this.form.getRawValue();
-    const payload = { ...raw, valor: this.converterParaNumero(raw.valor) };
+    const payload = this.montarPayload();
     this.http.post(this.urlConversoes, payload).subscribe({
       next: () => {
         this.toast.sucesso('Conversão registrada com sucesso.');
@@ -210,8 +214,7 @@ export class FormularioConversoesComponent implements OnInit {
   }
 
   private atualizarConversao(): void {
-    const raw = this.form.getRawValue();
-    const payload = { ...raw, valor: this.converterParaNumero(raw.valor) };
+    const payload = this.montarPayload();
     this.http.put(`${this.urlConversoes}/${this.conversaoParaEditar.codigo}`, payload).subscribe({
       next: () => {
         this.toast.sucesso('Conversão atualizada com sucesso.');
@@ -222,6 +225,16 @@ export class FormularioConversoesComponent implements OnInit {
         this.toast.erro(this.extrairMensagemErro(err));
       }
     });
+  }
+
+  private montarPayload(): ConversaoRequest {
+    const raw = this.form.getRawValue();
+    return {
+      unidadeDe: Number(raw.unidadeDe),
+      unidadePara: Number(raw.unidadePara),
+      operacao: raw.operacao,
+      valor: this.converterParaNumero(raw.valor)
+    };
   }
 
   onCancelar(): void {

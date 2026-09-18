@@ -8,6 +8,7 @@ import { MatIcon } from '@angular/material/icon';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../../../environments/environment';
 import { ToastService } from '../../../services/toast.service';
+import { ApiErrorService } from '../../../services/api-error.service';
 
 @Component({
   selector: 'app-formulario-unidades',
@@ -43,6 +44,7 @@ export class FormularioUnidadesComponent implements OnInit {
     private router: Router,
     private http: HttpClient,
     private toast: ToastService,
+    private apiErrorService: ApiErrorService,
   ) {
     const nav: Navigation | null = this.router.getCurrentNavigation();
     this.medidaParaEditar = nav?.extras?.state?.['medida'] ?? null;
@@ -78,11 +80,7 @@ export class FormularioUnidadesComponent implements OnInit {
   }
 
   private extrairMensagemErro(err: any, fallback = 'ERRO DE CHAMADA HTTP'): string {
-    const body = err?.error;
-    if (typeof body === 'string' && body.trim()) return body.trim();
-    if (body?.message && typeof body.message === 'string') return body.message;
-    if (body?.erro   && typeof body.erro   === 'string') return body.erro;
-    return fallback;
+    return this.apiErrorService.extrairMensagem(err, fallback);
   }
 
   private registrarUnidade(): void {

@@ -7,7 +7,14 @@ function validarAcesso(): boolean {
   const router = inject(Router);
 
   if (jwtService.hasValidToken()) {
-    return true;
+    // Token técnico do usuário System (fluxo de recuperação de senha/primeiro acesso)
+    // não concede acesso às telas da aplicação principal, mas não deve ser removido
+    // pois ainda é necessário para concluir o fluxo de troca de senha.
+    if (!jwtService.isSystemToken()) {
+      return true;
+    }
+    router.navigate(['']);
+    return false;
   }
 
   jwtService.removeToken();

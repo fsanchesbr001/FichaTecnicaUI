@@ -1,7 +1,10 @@
 export interface TokenJwt {
-  token: string;
-  type?: string;
+  jwt: string;
+  expirationMinutes?: number;
   expiresAt?: string;
-  expiresIn?: number;
-  jwt?: string;
+  usuarioLogin?: string;
+  usuarioNome?: string;
+  role?: string;
+  /** @deprecated backend nunca envia este campo; mantido apenas para compatibilidade retroativa */
+  token?: string;
 }

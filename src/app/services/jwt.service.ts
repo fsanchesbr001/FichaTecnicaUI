@@ -82,6 +82,22 @@ export class JwtService {
     const token = this.getToken();
     return token !== null && this.isTokenValid(token);
   }
+
+  /**
+   * Verifica se o token armazenado pertence ao usuário técnico de sistema (ROLE_SYSTEM),
+   * emitido pelo fluxo de recuperação de senha/primeiro acesso. Este token não representa
+   * uma sessão real de usuário e não deve ser tratado como "logado" pelos guards de rota.
+   * @returns true se o token válido armazenado possui role SYSTEM
+   */
+  isSystemToken(): boolean {
+    const token = this.getToken();
+    if (!token) {
+      return false;
+    }
+    const payload = this.decodeToken(token);
+    const role = payload?.['role'];
+    return typeof role === 'string' && role.toUpperCase().includes('SYSTEM');
+  }
 }
 
 

@@ -18,7 +18,7 @@ import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../../../environments/environment';
 import { ToastService } from '../../../services/toast.service';
 import { ApiErrorService } from '../../../services/api-error.service';
-import { UsuarioAtualizacaoRequest, UsuarioRegistroRequest, UsuarioResponse } from '../../../model/usuario.model';
+import { UsuarioResponse } from '../../../model/usuario.model';
 
 registerLocaleData(localePt);
 
@@ -88,8 +88,8 @@ export class FormularioUsuariosComponent implements OnInit {
 
   private readonly urlUsuarios         = `${environment.API}ficha-tecnica/usuarios`;
   private readonly urlRoles            = `${this.urlUsuarios}/roles`;
-  private readonly urlRegistrarUsuario = this.urlUsuarios;
-  private readonly urlAtualizarUsuario = this.urlUsuarios;
+  private readonly urlRegistrarUsuario = `${this.urlUsuarios}/registrar-usuario`;
+  private readonly urlAtualizarUsuario = `${this.urlUsuarios}/atualizar-usuario`;
   private readonly urlPrimeiroAcesso   = `${this.urlUsuarios}/primeiro-acesso`;
   private readonly urlGerarPdf         = `${environment.API}ficha-tecnica/relatorios/gerar-pdf`;
 
@@ -276,9 +276,10 @@ export class FormularioUsuariosComponent implements OnInit {
   private registrarUsuario(): void {
     const valores = this.form.getRawValue();
 
-    const payload: UsuarioRegistroRequest = {
+    // Backend (RegisterDTO) espera o campo "login", não "email"
+    const payload = {
+      login: valores.email,
       nome: valores.nome,
-      email: valores.email,
       cpf: valores.cpf,
       role: valores.role,
       senha: null,
@@ -317,11 +318,12 @@ export class FormularioUsuariosComponent implements OnInit {
       return;
     }
 
-    const payload: UsuarioAtualizacaoRequest = {
-      bloqueadoAdmin: valores.bloqueioAdm,
-      bloqueadoTentativas: valores.bloqueioTentativas,
-      bloqueadoExpiracao: valores.bloqueioExpiracao,
-      primeiroAcesso: valores.primeiroAcesso,
+    // Backend (AtualizarUsuarioRequestDTO) espera as chaves em snake_case
+    const payload = {
+      bloqueado_admin: valores.bloqueioAdm,
+      bloqueado_tentativas: valores.bloqueioTentativas,
+      bloqueado_expiracao: valores.bloqueioExpiracao,
+      primeiro_acesso: valores.primeiroAcesso,
       nome: valores.nome,
       role: valores.role,
     };

@@ -63,7 +63,7 @@ export class AuthService {
    * @returns Observable com os dados do usuário
    */
   buscarUsuarioPorEmail(email: string): Observable<UsuarioResponse> {
-    return this.http.get<UsuarioResponse>(`${this.usuariosBaseUrl}/${encodeURIComponent(email)}`).pipe(take(1));
+    return this.http.get<UsuarioResponse>(`${this.usuariosBaseUrl}/buscar-usuario/${encodeURIComponent(email)}`).pipe(take(1));
   }
 
   /**

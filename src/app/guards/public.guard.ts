@@ -6,7 +6,9 @@ export const publicGuard: CanActivateFn = () => {
   const jwtService = inject(JwtService);
   const router = inject(Router);
 
-  if (jwtService.hasValidToken()) {
+  // Token técnico do usuário System (fluxo de recuperação de senha/primeiro acesso)
+  // não deve ser tratado como sessão de usuário logado.
+  if (jwtService.hasValidToken() && !jwtService.isSystemToken()) {
     router.navigate(['/principal/lista-produtos']);
     return false;
   }

@@ -1,7 +1,7 @@
 {
   "name": "ficha-tecnica-ui",
-  "version": "1.0.40",
-  "scripts": {
+  "version": "1.0.41",
+    "scripts": {
     "ng": "ng",
     "start": "ng serve",
     "build": "ng build",

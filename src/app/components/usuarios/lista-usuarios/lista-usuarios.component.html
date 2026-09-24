@@ -38,11 +38,11 @@
   </table>
   <mat-paginator [pageSize]="5" [pageSizeOptions]="[5, 10, 20]" showFirstLastButtons></mat-paginator>
   <div class="lista-usuarios-footer">
-    <button mat-raised-button color="primary" (click)="onNovo()">
+    <button mat-raised-button color="primary" [disabled]="perfilUser" (click)="onNovo()">
       <mat-icon>add</mat-icon>
       Adicionar
     </button>
-    <button mat-raised-button color="accent" (click)="onImprimir()">
+    <button mat-raised-button color="accent" [disabled]="perfilUser" (click)="onImprimir()">
       <mat-icon>print</mat-icon>
       Imprimir
     </button>

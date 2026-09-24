@@ -10,28 +10,32 @@ interface JwtPayload {
 export class JwtService {
   private readonly TOKEN_KEY = 'jwt_token';
 
-  constructor() {}
+  constructor() {
+    // Tokens previously persisted in localStorage must not survive this change.
+    localStorage.removeItem(this.TOKEN_KEY);
+  }
 
   /**
-   * Armazena o token JWT no localStorage
+   * Armazena o token JWT apenas durante a sessão da aba/janela.
    * @param token Token JWT a ser armazenado
    */
   setToken(token: string): void {
-    localStorage.setItem(this.TOKEN_KEY, token);
+    sessionStorage.setItem(this.TOKEN_KEY, token);
   }
 
   /**
-   * Recupera o token JWT do localStorage
+   * Recupera o token JWT da sessão atual.
    * @returns Token JWT armazenado ou null
    */
   getToken(): string | null {
-    return localStorage.getItem(this.TOKEN_KEY);
+    return sessionStorage.getItem(this.TOKEN_KEY);
   }
 
   /**
-   * Remove o token JWT do localStorage
+   * Remove o token JWT da sessão atual.
    */
   removeToken(): void {
+    sessionStorage.removeItem(this.TOKEN_KEY);
     localStorage.removeItem(this.TOKEN_KEY);
   }
 
@@ -99,5 +103,4 @@ export class JwtService {
     return typeof role === 'string' && role.toUpperCase().includes('SYSTEM');
   }
 }
-
 

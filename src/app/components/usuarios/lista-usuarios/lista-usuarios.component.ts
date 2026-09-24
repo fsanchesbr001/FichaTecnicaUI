@@ -13,6 +13,7 @@ import { DialogoConfirmacaoComponent } from '../../shared/dialogo-confirmacao/di
 import { ToastService } from '../../../services/toast.service';
 import { ApiErrorService } from '../../../services/api-error.service';
 import { UsuarioResponse } from '../../../model/usuario.model';
+import { JwtService } from '../../../services/jwt.service';
 
 @Component({
   selector: 'app-lista-usuarios',
@@ -31,14 +32,15 @@ import { UsuarioResponse } from '../../../model/usuario.model';
 export class ListaUsuariosComponent implements AfterViewInit, OnInit {
   @Input() usuarios: UsuarioResponse[] = [];
   displayedColumns = ['nome', 'email', 'role', 'acoes'];
+  perfilUser = false;
 
   dataSource = new MatTableDataSource<UsuarioResponse>(this.usuarios);
 
   @ViewChild(MatPaginator) paginator!: MatPaginator;
 
   private readonly urlUsuarios = `${environment.API}ficha-tecnica/usuarios`;
-  private readonly urlListarUsuarios = this.urlUsuarios;
-  private readonly urlExcluirUsuario  = this.urlUsuarios;
+  private readonly urlListarUsuarios = `${this.urlUsuarios}/listar-todos-usuarios`;
+  private readonly urlExcluirUsuario  = `${this.urlUsuarios}/excluir-usuario`;
   private readonly urlGerarPdf        = `${environment.API}ficha-tecnica/relatorios/gerar-pdf`;
 
   constructor(
@@ -47,10 +49,35 @@ export class ListaUsuariosComponent implements AfterViewInit, OnInit {
     private dialog: MatDialog,
     private toast: ToastService,
     private apiErrorService: ApiErrorService,
+    private jwtService: JwtService,
   ) {}
 
   ngOnInit(): void {
+    this.perfilUser = this.usuarioLogadoEhUser();
     this.carregarUsuarios();
+  }
+
+  private usuarioLogadoEhUser(): boolean {
+    const token = this.jwtService.getToken();
+    if (!token) {
+      return false;
+    }
+
+    const payload = this.jwtService.decodeToken(token);
+    const role = payload?.['role'];
+
+    if (typeof role === 'string') {
+      const normalizedRole = role.toUpperCase().replace('ROLE_', '');
+      return normalizedRole === 'USER';
+    }
+
+    if (Array.isArray(role)) {
+      return role
+        .map((r: unknown) => String(r).toUpperCase().replace('ROLE_', ''))
+        .includes('USER');
+    }
+
+    return false;
   }
 
   ngAfterViewInit(): void {
@@ -87,7 +114,7 @@ export class ListaUsuariosComponent implements AfterViewInit, OnInit {
   }
 
   private excluirUsuario(usuario: UsuarioResponse): void {
-    this.http.delete(`${this.urlExcluirUsuario}/${encodeURIComponent(usuario.email)}`).subscribe({
+    this.http.post(this.urlExcluirUsuario, { email: usuario.email }).subscribe({
       next: () => {
         this.toast.sucesso('Usuário excluído com sucesso.');
         this.carregarUsuarios();

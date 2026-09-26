@@ -32,6 +32,7 @@ export class SeletorArquivoImagemComponent implements ControlValueAccessor {
   @Input() accept = 'image/*';
   @Input() appearance: 'fill' | 'outline' = 'fill';
   @Input() erro: string | null = null;
+  @Input() imageUrlAtual = '';
 
   @Output() arquivoSelecionado = new EventEmitter<File | null>();
 
@@ -39,12 +40,14 @@ export class SeletorArquivoImagemComponent implements ControlValueAccessor {
 
   nomeExibido = '';
   desabilitado = false;
+  arquivoLocalSelecionado = false;
 
   private onChange: (value: string) => void = () => {};
   private onTouched: () => void = () => {};
 
   writeValue(value: string | null): void {
     this.nomeExibido = this.extrairNomeExibido(value ?? '');
+    this.arquivoLocalSelecionado = false;
   }
 
   registerOnChange(fn: (value: string) => void): void {
@@ -85,6 +88,7 @@ export class SeletorArquivoImagemComponent implements ControlValueAccessor {
     }
 
     this.nomeExibido = arquivo.name;
+    this.arquivoLocalSelecionado = true;
     this.onChange(arquivo.name);
     this.onTouched();
     this.arquivoSelecionado.emit(arquivo);
@@ -99,6 +103,7 @@ export class SeletorArquivoImagemComponent implements ControlValueAccessor {
     }
 
     this.nomeExibido = '';
+    this.arquivoLocalSelecionado = false;
     this.onChange('');
     this.onTouched();
     this.arquivoSelecionado.emit(null);
@@ -118,5 +123,17 @@ export class SeletorArquivoImagemComponent implements ControlValueAccessor {
     const partes = semQueryString.split(/[\\/]/).filter(Boolean);
     return partes.length ? partes[partes.length - 1] : conteudo;
   }
-}
 
+  get deveMostrarImagemAtual(): boolean {
+    const url = this.imageUrlAtual?.trim();
+    if (!url) {
+      return false;
+    }
+
+    if (!this.arquivoLocalSelecionado) {
+      return true;
+    }
+
+    return url.startsWith('blob:');
+  }
+}

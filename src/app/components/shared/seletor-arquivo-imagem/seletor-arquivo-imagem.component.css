@@ -11,3 +11,16 @@
   display: none;
 }
 
+.preview-wrapper {
+  margin-top: 8px;
+  display: flex;
+  justify-content: center;
+}
+
+.preview-imagem {
+  width: 100%;
+  max-width: 320px;
+  max-height: 180px;
+  object-fit: contain;
+  border-radius: 6px;
+}

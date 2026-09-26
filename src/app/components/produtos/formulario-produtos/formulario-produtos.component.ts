@@ -89,12 +89,13 @@ export class FormularioProdutosComponent implements OnInit, OnDestroy {
     }
 
     const valorAtual = String(this.form.get('imagem')?.value ?? '').trim();
-    if (valorAtual && this.ehUrlImagem(valorAtual)) {
-      return valorAtual;
+    if (valorAtual) {
+      return this.resolverUrlImagem(valorAtual);
     }
 
     if (!this.imagemAlteradaManualmente) {
-      return String(this.produtoParaEditar?.imagem ?? '').trim();
+      const imagemPersistida = String(this.produtoParaEditar?.imagem ?? '').trim();
+      return this.resolverUrlImagem(imagemPersistida);
     }
 
     return '';
@@ -272,7 +273,7 @@ export class FormularioProdutosComponent implements OnInit, OnDestroy {
   private uploadImagem(idProduto: number): ReturnType<HttpClient['post']> {
     const formData = new FormData();
     formData.append('file', this.arquivoImagemSelecionado!, this.arquivoImagemSelecionado!.name);
-    return this.http.post(`${this.urlProdutos}/${idProduto}/imagem`, formData);
+    return this.http.post(`${this.urlProdutos}/${idProduto}/imagem/upload`, formData);
   }
 
   /** Normaliza o campo monetário ao sair: garante sempre 2 casas decimais */
@@ -336,6 +337,24 @@ export class FormularioProdutosComponent implements OnInit, OnDestroy {
 
   private ehUrlImagem(valor: string): boolean {
     return /^(https?:\/\/|\/|data:image\/)/i.test(valor);
+  }
+
+  private resolverUrlImagem(valor: string): string {
+    const caminho = valor.trim();
+    if (!caminho) {
+      return '';
+    }
+
+    if (this.ehUrlImagem(caminho)) {
+      return caminho;
+    }
+
+    const apiBase = environment.API.replace(/\/+$/, '');
+    const caminhoNormalizado = caminho
+      .replace(/^\/+/, '')
+      .replace(/^api\/imagens\/+/i, '');
+
+    return `${apiBase}/api/imagens/${caminhoNormalizado}`;
   }
 
   private revogarPreviewImagem(): void {

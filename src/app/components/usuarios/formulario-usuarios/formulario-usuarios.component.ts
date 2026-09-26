@@ -158,8 +158,16 @@ export class FormularioUsuariosComponent implements OnInit {
 
   private preencherFormulario(u: UsuarioResponse): void {
     const cpfSomenteDigitos = u.cpf ? u.cpf.replace(/\D/g, '') : '';
+    const primeiroAcesso = this.restricaoHabilitada(u.primeiroAcesso ?? u.primeiro_acesso);
+    const bloqueioAdm = this.restricaoHabilitada(u.bloqueadoAdmin ?? u.bloqueado_admin);
+    const bloqueioTentativas = this.restricaoHabilitada(
+      u.bloqueadoTentativas ?? u.bloqueado_tentativas
+    );
+    const bloqueioExpiracao = this.restricaoHabilitada(
+      u.bloqueadoExpiracao ?? u.bloqueado_expiracao
+    );
 
-    this.primeiroAcessoVeioDoDb = u.primeiroAcesso === true;
+    this.primeiroAcessoVeioDoDb = primeiroAcesso;
 
     // Modo edição: email e CPF não podem ser alterados
     this.form.get('email')?.disable();
@@ -170,10 +178,10 @@ export class FormularioUsuariosComponent implements OnInit {
       email: u.email ?? '',
       cpf: cpfSomenteDigitos,
       role: u.role ?? '',
-      primeiroAcesso: u.primeiroAcesso === true,
-      bloqueioAdm: u.bloqueadoAdmin === true,
-      bloqueioTentativas: u.bloqueadoTentativas === true,
-      bloqueioExpiracao: u.bloqueadoExpiracao === true,
+      primeiroAcesso,
+      bloqueioAdm,
+      bloqueioTentativas,
+      bloqueioExpiracao,
     }, { emitEvent: false });
 
     // Campos disabled precisam ser atualizados diretamente pelo AbstractControl
@@ -190,6 +198,10 @@ export class FormularioUsuariosComponent implements OnInit {
 
     // Aplica regras de disable/enable com base nos valores carregados do banco
     this.aplicarRegrasToggleInicio();
+  }
+
+  private restricaoHabilitada(valor: boolean | number | undefined | null): boolean {
+    return valor === true || valor === 1;
   }
 
   // ── Regras de negócio dos toggles ─────────────────────────────────────────

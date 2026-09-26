@@ -39,6 +39,16 @@
   }
 </mat-form-field>
 
+@if (deveMostrarImagemAtual) {
+  <div class="preview-wrapper">
+    <img
+      class="preview-imagem"
+      [src]="imageUrlAtual"
+      alt="Imagem atual do produto"
+    />
+  </div>
+}
+
 <input
   #fileInput
   class="input-arquivo"
@@ -47,4 +57,3 @@
   [disabled]="desabilitado"
   (change)="onArquivoChange($event)"
 >
-

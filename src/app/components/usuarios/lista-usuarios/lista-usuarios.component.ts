@@ -87,7 +87,7 @@ export class ListaUsuariosComponent implements AfterViewInit, OnInit {
   carregarUsuarios(): void {
     this.http.get<UsuarioResponse[]>(this.urlListarUsuarios).subscribe({
       next: (dados) => {
-        this.dataSource.data = dados ?? [];
+        this.dataSource.data = (dados ?? []).filter(usuario => !this.ehUsuarioSistema(usuario));
       },
       error: (err) => {
         this.dataSource.data = [];
@@ -97,12 +97,18 @@ export class ListaUsuariosComponent implements AfterViewInit, OnInit {
   }
 
   onEditar(usuario: UsuarioResponse): void {
+    if (this.ehUsuarioSistema(usuario)) {
+      return;
+    }
     this.router.navigate(['/principal/formulario-usuarios'], {
       state: { usuario }
     });
   }
 
   onExcluir(usuario: UsuarioResponse): void {
+    if (this.ehUsuarioSistema(usuario)) {
+      return;
+    }
     this.dialog.open(DialogoConfirmacaoComponent, {
       width: '360px',
       data: {
@@ -114,6 +120,9 @@ export class ListaUsuariosComponent implements AfterViewInit, OnInit {
   }
 
   private excluirUsuario(usuario: UsuarioResponse): void {
+    if (this.ehUsuarioSistema(usuario)) {
+      return;
+    }
     this.http.post(this.urlExcluirUsuario, { email: usuario.email }).subscribe({
       next: () => {
         this.toast.sucesso('Usuário excluído com sucesso.');
@@ -166,5 +175,10 @@ export class ListaUsuariosComponent implements AfterViewInit, OnInit {
 
   onNovo(): void {
     this.router.navigate(['/principal/formulario-usuarios']);
+  }
+
+  private ehUsuarioSistema(usuario: UsuarioResponse): boolean {
+    return typeof usuario.role === 'string'
+      && usuario.role.toUpperCase().replace('ROLE_', '') === 'SYSTEM';
   }
 }

@@ -15,6 +15,10 @@ export interface UsuarioResponse {
   bloqueadoAdmin?: boolean;
   bloqueadoTentativas?: boolean;
   bloqueadoExpiracao?: boolean;
+  primeiro_acesso?: boolean | number;
+  bloqueado_admin?: boolean | number;
+  bloqueado_tentativas?: boolean | number;
+  bloqueado_expiracao?: boolean | number;
   tokenSeguranca?: string | null;
   dataCriacao?: string | null;
   dataExpiracaoToken?: string | null;

@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import {Observable, take} from 'rxjs';
-import {environment} from '../../../environments/environment';
+import {environment} from '../../environments/environment';
 import {UsuarioLogin, UsuarioResponse} from '../model/usuario.model';
 import {TokenJwt} from '../model/tokenJwt.model';
 
@@ -10,14 +10,13 @@ import {TokenJwt} from '../model/tokenJwt.model';
 })
 
 export class AuthService {
-  private readonly authBaseUrl = `${environment.API}auth`;
-  private readonly usuariosBaseUrl = `${environment.API}ficha-tecnica/usuarios`;
+  private readonly authBaseUrl = `${environment.apiUrl}/auth`;
+  private readonly usuariosBaseUrl = `${environment.apiUrl}/ficha-tecnica/usuarios`;
   private readonly loginUrl = `${this.authBaseUrl}/login`;
   private readonly logoutUrl = `${this.authBaseUrl}/logout`;
-  private readonly loginRecuperacaoUrl = `${environment.API}ficha-tecnica/login-recuperacao-senha`;
-  private readonly enviarEmailUrl = `${environment.API}ficha-tecnica/enviar-email-seguranca`;
-  private readonly trocarSenhaUrl = `${environment.API}ficha-tecnica/trocar-senha`;
-  private readonly sitePermitido:string = `${environment.CORS_ORIGIN_ALLOWED}`;
+  private readonly loginRecuperacaoUrl = `${environment.apiUrl}/ficha-tecnica/login-recuperacao-senha`;
+  private readonly enviarEmailUrl = `${environment.apiUrl}/ficha-tecnica/enviar-email-seguranca`;
+  private readonly trocarSenhaUrl = `${environment.apiUrl}/ficha-tecnica/trocar-senha`;
 
   constructor(private http:HttpClient) {}
 
@@ -33,11 +32,7 @@ export class AuthService {
       senha: usuario.senha
     };
 
-    return this.http.post<TokenJwt>(this.loginUrl, payload,
-      {headers:{'Content-Type':'application/json',
-          'Access-Control-Allow-Origin':`${this.sitePermitido}`,
-          'Access-Control-Allow-Headers':'Content-Type'
-          }}).pipe(take(1));
+    return this.http.post<TokenJwt>(this.loginUrl, payload).pipe(take(1));
   }
 
   /**

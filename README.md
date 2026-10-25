@@ -7,10 +7,108 @@ This project was generated using [Angular CLI](https://github.com/angular/angula
 To start a local development server, run:
 
 ```bash
-ng serve
+npm start
 ```
 
 Once the server is running, open your browser and navigate to `http://localhost:4200/`. The application will automatically reload whenever you modify any of the source files.
+
+O `proxy.conf.json` encaminha `/api/**` para `http://localhost:8080`,
+removendo o prefixo `/api`. Inicie a API Spring Boot na porta 8080 antes de
+usar as funcionalidades que dependem dela.
+
+## Deploy com Docker
+
+| Arquivo | Responsabilidade |
+| --- | --- |
+| `Dockerfile` | Build com Node 22 Alpine, `npm ci` e `npm run build`; imagem final com `nginx:alpine` na porta 80. |
+| `.dockerignore` | Exclui dependencias locais, builds, caches e metadados do contexto Docker. |
+| `nginx.conf` | Serve `dist/ficha-tecnica-ui/browser`, aplica fallback SPA e encaminha `/api/` para o backend. |
+| `docker-compose.yml` | Publica `80:80` e conecta o frontend a rede externa `ficha_tecnica_network`. |
+| `src/environments/environment.ts` e `environment.prod.ts` | Definem `apiUrl: '/api'`, sem hostname publico do backend. |
+| `angular.json` | Usa o environment de producao no build e o proxy local no servidor de desenvolvimento. |
+
+O Node 22 e compativel com o Angular 19 deste projeto. O build padrao ja usa
+a configuracao `production`, com saida estatica em
+`dist/ficha-tecnica-ui/browser`.
+O `ng2-charts` utiliza a linha 8, compativel com Angular/CDK 19, para permitir
+instalacao reproduzivel com `npm ci` sem ignorar dependencias pares.
+
+### Conectar o backend
+
+O Compose deste repositorio nao cria um backend ficticio: utiliza uma rede
+externa para conectar a API existente. Crie a rede uma unica vez:
+
+```powershell
+docker network create ficha_tecnica_network
+```
+
+No Compose da API Spring Boot, conecte o servico a mesma rede e atribua o
+alias `backend`:
+
+```yaml
+services:
+  backend:
+    # Mantenha aqui a imagem/build e as configuracoes existentes da API.
+    networks:
+      ficha_tecnica_network:
+        aliases:
+          - backend
+
+networks:
+  ficha_tecnica_network:
+    external: true
+    name: ficha_tecnica_network
+```
+
+Se a API ja estiver em um container sem Compose, conecte esse container:
+
+```powershell
+docker network connect --alias backend ficha_tecnica_network <container-da-api>
+```
+
+A API deve escutar em `0.0.0.0:8080` dentro do container. Nao e necessario
+publicar a porta 8080 no host para a comunicacao com o frontend. Inicie o
+backend antes do frontend, pois o Nginx resolve `backend` ao iniciar.
+Uma API executada apenas no host nao sera encontrada por esse nome.
+
+### Construir e iniciar o frontend
+
+Com o Docker Engine ativo, a porta 80 livre e a API conectada a rede:
+
+```powershell
+docker compose up -d --build
+```
+
+Acesse `http://localhost`. Para acompanhar falhas de comunicacao com a API:
+
+```powershell
+docker compose logs -f frontend
+```
+
+### Rotas e autenticacao
+
+O navegador utiliza apenas a origem do frontend:
+
+| Requisicao do navegador | Destino interno |
+| --- | --- |
+| `/api/auth/login` | `http://backend:8080/auth/login` |
+| `/api/ficha-tecnica/usuarios` | `http://backend:8080/ficha-tecnica/usuarios` |
+| `/api/api/imagens/arquivo.png` | `http://backend:8080/api/imagens/arquivo.png` |
+
+A barra final em `proxy_pass http://backend:8080/` remove somente o primeiro
+prefixo `/api/`. O segundo `/api` na rota de imagens pertence ao endpoint
+existente do backend. A regra `location ^~ /api/` impede que imagens e PDFs
+da API sejam capturados pela regra de arquivos estaticos.
+
+Os servicos e componentes HTTP usam `environment.apiUrl`. O interceptor
+mantem o envio do JWT nas chamadas autenticadas e as excecoes de login e
+recuperacao de senha. Os headers `Access-Control-Allow-*` foram removidos
+do login: sao headers de resposta do servidor, nao de requisicao do cliente.
+O proxy evita CORS ao manter a mesma origem para UI e API; nao substitui a
+autenticacao/autorizacao do Spring Security.
+
+Em producao publica, configure HTTPS no proxy de entrada ou balanceador que
+encaminha trafego para a porta 80 deste container.
 
 ## Code scaffolding
 
@@ -104,3 +202,4 @@ For more information on using the Angular CLI, including detailed command refere
 - 1.0.41 - Bloqueio de criação de usuário para Users.
 - 1.0.42 - Corrigindo seleção de toogles.
 - 1.0.43 - Correções da carga e exibição de imagens.
+- 1.1.0 - Adicionado container e preparando para produção.

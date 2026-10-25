@@ -1,0 +1,15 @@
+services:
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "80:80"
+    restart: unless-stopped
+    networks:
+      - ficha_tecnica_network
+
+networks:
+  ficha_tecnica_network:
+    external: true
+    name: ficha_tecnica_network

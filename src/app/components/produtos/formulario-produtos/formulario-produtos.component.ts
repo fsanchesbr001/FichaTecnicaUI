@@ -8,7 +8,7 @@ import { MatButton } from '@angular/material/button';
 import { Router, Navigation } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
 import { catchError, of, switchMap } from 'rxjs';
-import { environment } from '../../../../../environments/environment';
+import { environment } from '../../../../environments/environment';
 import { ToastService } from '../../../services/toast.service';
 import { ApiErrorService } from '../../../services/api-error.service';
 import { ListaItensProdutoComponent } from '../item-produto/lista-itens-produto/lista-itens-produto.component';
@@ -51,8 +51,8 @@ export class FormularioProdutosComponent implements OnInit, OnDestroy {
   private previewImagemUrl: string | null = null;
   private imagemAlteradaManualmente = false;
 
-  private readonly urlProdutos = `${environment.API}ficha-tecnica/produtos`;
-  private readonly urlGerarPdf = `${environment.API}ficha-tecnica/produtos/gerar-pdf-detalhe`;
+  private readonly urlProdutos = `${environment.apiUrl}/ficha-tecnica/produtos`;
+  private readonly urlGerarPdf = `${environment.apiUrl}/ficha-tecnica/produtos/gerar-pdf-detalhe`;
 
   constructor(
     private fb: FormBuilder,
@@ -345,11 +345,15 @@ export class FormularioProdutosComponent implements OnInit, OnDestroy {
       return '';
     }
 
+    if (/^\/api\/imagens\//i.test(caminho)) {
+      return `${environment.apiUrl}${caminho}`;
+    }
+
     if (this.ehUrlImagem(caminho)) {
       return caminho;
     }
 
-    const apiBase = environment.API.replace(/\/+$/, '');
+    const apiBase = environment.apiUrl;
     const caminhoNormalizado = caminho
       .replace(/^\/+/, '')
       .replace(/^api\/imagens\/+/i, '');

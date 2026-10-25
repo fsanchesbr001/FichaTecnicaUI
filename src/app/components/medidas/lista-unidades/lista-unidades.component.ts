@@ -7,7 +7,7 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { Router } from '@angular/router';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
-import { environment } from '../../../../../environments/environment';
+import { environment } from '../../../../environments/environment';
 import { DialogoConfirmacaoComponent } from '../../shared/dialogo-confirmacao/dialogo-confirmacao.component';
 import { ToastService } from '../../../services/toast.service';
 
@@ -37,12 +37,12 @@ export class ListaUnidadesComponent implements AfterViewInit, OnInit {
 
   @ViewChild(MatPaginator) paginator!: MatPaginator;
 
-  private readonly urlListar = `${environment.API}ficha-tecnica/unidades-medida`;
+  private readonly urlListar = `${environment.apiUrl}/ficha-tecnica/unidades-medida`;
   private readonly urlGerarPdfCandidatas = [
-    `${environment.API}ficha-tecnica/unidades-medida/relatorios/lista`,
-    `${environment.API}ficha-tecnica/unidades-medidas/gerar-pdf-lista`,
-    `${environment.API}ficha-tecnica/relatorios/unidades-medida/gerar-pdf-lista`,
-    `${environment.API}ficha-tecnica/relatorios/unidades-medidas/gerar-pdf-lista`,
+    `${environment.apiUrl}/ficha-tecnica/unidades-medida/relatorios/lista`,
+    `${environment.apiUrl}/ficha-tecnica/unidades-medidas/gerar-pdf-lista`,
+    `${environment.apiUrl}/ficha-tecnica/relatorios/unidades-medida/gerar-pdf-lista`,
+    `${environment.apiUrl}/ficha-tecnica/relatorios/unidades-medidas/gerar-pdf-lista`,
   ];
 
   constructor(

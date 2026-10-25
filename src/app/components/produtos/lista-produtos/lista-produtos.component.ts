@@ -7,7 +7,7 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { Router } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
-import { environment } from '../../../../../environments/environment';
+import { environment } from '../../../../environments/environment';
 import { DialogoConfirmacaoComponent } from '../../shared/dialogo-confirmacao/dialogo-confirmacao.component';
 import { ToastService } from '../../../services/toast.service';
 import { CommonModule } from '@angular/common';
@@ -42,8 +42,8 @@ export class ListaProdutosComponent implements AfterViewInit, OnInit {
 
   @ViewChild(MatPaginator) paginator!: MatPaginator;
 
-  private readonly urlListar   = `${environment.API}ficha-tecnica/produtos`;
-  private readonly urlGerarPdf = `${environment.API}ficha-tecnica/produtos/gerar-pdf-lista`;
+  private readonly urlListar   = `${environment.apiUrl}/ficha-tecnica/produtos`;
+  private readonly urlGerarPdf = `${environment.apiUrl}/ficha-tecnica/produtos/gerar-pdf-lista`;
 
   constructor(
     private router: Router,
@@ -136,4 +136,3 @@ export class ListaProdutosComponent implements AfterViewInit, OnInit {
     this.router.navigate(['/principal/formulario-produto']);
   }
 }
-

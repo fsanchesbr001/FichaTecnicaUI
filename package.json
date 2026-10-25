@@ -1,6 +1,6 @@
 {
   "name": "ficha-tecnica-ui",
-  "version": "1.0.43",
+  "version": "1.1.0",
     "scripts": {
     "ng": "ng",
     "start": "ng serve",
@@ -22,7 +22,7 @@
     "chart.js": "^4.5.1",
     "html2canvas": "^1.4.1",
     "jspdf": "^4.2.1",
-    "ng2-charts": "^10.0.0",
+    "ng2-charts": "^8.0.0",
     "ngx-mask": "^19.0.7",
     "rxjs": "~7.8.0",
     "tslib": "^2.3.0",

@@ -10,7 +10,7 @@ import {
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
-import { environment } from '../../../../../environments/environment';
+import { environment } from '../../../../environments/environment';
 import {
   Chart,
   LineController,
@@ -97,7 +97,7 @@ export class GraficoPrecosItemComponent implements OnChanges, OnDestroy {
 
   private chart: Chart | null = null;
 
-  private readonly urlGrafico = `${environment.API}ficha-tecnica/historico-itens/grafico-precos`;
+  private readonly urlGrafico = `${environment.apiUrl}/ficha-tecnica/historico-itens/grafico-precos`;
 
   get tituloGrafico(): string {
     return this.normalizarTextoCorrompido(this.dados?.titulo ?? '');

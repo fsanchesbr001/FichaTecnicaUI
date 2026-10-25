@@ -8,7 +8,7 @@ import { MatButton } from '@angular/material/button';
 import { MatOption, MatSelect } from '@angular/material/select';
 import { Router, Navigation } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
-import { environment } from '../../../../../environments/environment';
+import { environment } from '../../../../environments/environment';
 import { ToastService } from '../../../services/toast.service';
 import { ApiErrorService } from '../../../services/api-error.service';
 import { GraficoPrecosItemComponent } from '../grafico-precos-item/grafico-precos-item.component';
@@ -62,9 +62,9 @@ export class FormularioItemComponent implements OnInit {
 
   unidades: UnidadeMedida[] = [];
 
-  private readonly urlItens    = `${environment.API}ficha-tecnica/itens`;
-  private readonly urlUnidades = `${environment.API}ficha-tecnica/unidades-medida`;
-  private readonly urlGerarPdf = `${environment.API}ficha-tecnica/itens/gerar-pdf-detalhe`;
+  private readonly urlItens    = `${environment.apiUrl}/ficha-tecnica/itens`;
+  private readonly urlUnidades = `${environment.apiUrl}/ficha-tecnica/unidades-medida`;
+  private readonly urlGerarPdf = `${environment.apiUrl}/ficha-tecnica/itens/gerar-pdf-detalhe`;
 
   constructor(
     private fb: FormBuilder,

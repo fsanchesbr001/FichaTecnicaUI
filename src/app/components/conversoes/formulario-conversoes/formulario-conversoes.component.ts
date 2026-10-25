@@ -8,7 +8,7 @@ import { MatButton } from '@angular/material/button';
 import { MatOption, MatSelect } from '@angular/material/select';
 import { Router, Navigation } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
-import { environment } from '../../../../../environments/environment';
+import { environment } from '../../../../environments/environment';
 import { ToastService } from '../../../services/toast.service';
 import { ApiErrorService } from '../../../services/api-error.service';
 
@@ -69,9 +69,9 @@ export class FormularioConversoesComponent implements OnInit {
     { label: 'Divide',     value: 'DIVIDE'     },
   ];
 
-  private readonly urlConversoes  = `${environment.API}ficha-tecnica/conversoes`;
-  private readonly urlUnidades    = `${environment.API}ficha-tecnica/unidades-medida`;
-  private readonly urlGerarPdf    = `${environment.API}ficha-tecnica/conversoes/gerar-pdf-detalhe`;
+  private readonly urlConversoes  = `${environment.apiUrl}/ficha-tecnica/conversoes`;
+  private readonly urlUnidades    = `${environment.apiUrl}/ficha-tecnica/unidades-medida`;
+  private readonly urlGerarPdf    = `${environment.apiUrl}/ficha-tecnica/conversoes/gerar-pdf-detalhe`;
 
   constructor(
     private fb: FormBuilder,

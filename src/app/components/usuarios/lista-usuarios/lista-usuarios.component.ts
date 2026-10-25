@@ -8,7 +8,7 @@ import { MatTableDataSource } from '@angular/material/table';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { Router } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
-import { environment } from '../../../../../environments/environment';
+import { environment } from '../../../../environments/environment';
 import { DialogoConfirmacaoComponent } from '../../shared/dialogo-confirmacao/dialogo-confirmacao.component';
 import { ToastService } from '../../../services/toast.service';
 import { ApiErrorService } from '../../../services/api-error.service';
@@ -38,10 +38,10 @@ export class ListaUsuariosComponent implements AfterViewInit, OnInit {
 
   @ViewChild(MatPaginator) paginator!: MatPaginator;
 
-  private readonly urlUsuarios = `${environment.API}ficha-tecnica/usuarios`;
+  private readonly urlUsuarios = `${environment.apiUrl}/ficha-tecnica/usuarios`;
   private readonly urlListarUsuarios = `${this.urlUsuarios}/listar-todos-usuarios`;
   private readonly urlExcluirUsuario  = `${this.urlUsuarios}/excluir-usuario`;
-  private readonly urlGerarPdf        = `${environment.API}ficha-tecnica/relatorios/gerar-pdf`;
+  private readonly urlGerarPdf        = `${environment.apiUrl}/ficha-tecnica/relatorios/gerar-pdf`;
 
   constructor(
     private router: Router,

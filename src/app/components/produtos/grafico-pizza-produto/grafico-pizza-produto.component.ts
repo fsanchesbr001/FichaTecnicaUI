@@ -10,7 +10,7 @@ import {
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
-import { environment } from '../../../../../environments/environment';
+import { environment } from '../../../../environments/environment';
 import {
   ArcElement,
   Chart,
@@ -61,7 +61,7 @@ export class GraficoPizzaProdutoComponent implements OnChanges, OnDestroy {
   dados: GraficoPizzaProdutoResponse | null = null;
 
   private chart: Chart | null = null;
-  private readonly urlGraficoPizza = `${environment.API}ficha-tecnica/produtos`;
+  private readonly urlGraficoPizza = `${environment.apiUrl}/ficha-tecnica/produtos`;
 
   get tituloGrafico(): string {
     return `Composicao de Custo - ${this.dados?.nomeProduto ?? ''}`.trim();

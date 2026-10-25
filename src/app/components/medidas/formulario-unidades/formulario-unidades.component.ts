@@ -6,7 +6,7 @@ import { MatError, MatFormField, MatInput, MatLabel, MatSuffix } from '@angular/
 import { Router, Navigation } from '@angular/router';
 import { MatIcon } from '@angular/material/icon';
 import { HttpClient } from '@angular/common/http';
-import { environment } from '../../../../../environments/environment';
+import { environment } from '../../../../environments/environment';
 import { ToastService } from '../../../services/toast.service';
 import { ApiErrorService } from '../../../services/api-error.service';
 
@@ -36,8 +36,8 @@ export class FormularioUnidadesComponent implements OnInit {
   salvando = false;
   protected medidaParaEditar: any = null;
 
-  private readonly urlUnidades = `${environment.API}ficha-tecnica/unidades-medida`;
-  private readonly urlGerarPdfDetalheBase = `${environment.API}ficha-tecnica/unidades-medida/relatorios`;
+  private readonly urlUnidades = `${environment.apiUrl}/ficha-tecnica/unidades-medida`;
+  private readonly urlGerarPdfDetalheBase = `${environment.apiUrl}/ficha-tecnica/unidades-medida/relatorios`;
 
   constructor(
     private fb: FormBuilder,

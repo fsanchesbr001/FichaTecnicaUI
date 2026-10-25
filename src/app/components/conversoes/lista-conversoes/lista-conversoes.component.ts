@@ -8,7 +8,7 @@ import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { Router } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
 import { CommonModule } from '@angular/common';
-import { environment } from '../../../../../environments/environment';
+import { environment } from '../../../../environments/environment';
 import { DialogoConfirmacaoComponent } from '../../shared/dialogo-confirmacao/dialogo-confirmacao.component';
 import { ToastService } from '../../../services/toast.service';
 
@@ -42,8 +42,8 @@ export class ListaConversoesComponent implements AfterViewInit, OnInit {
 
   @ViewChild(MatPaginator) paginator!: MatPaginator;
 
-  private readonly urlListar   = `${environment.API}ficha-tecnica/conversoes`;
-  private readonly urlGerarPdf = `${environment.API}ficha-tecnica/conversoes/gerar-pdf-lista`;
+  private readonly urlListar   = `${environment.apiUrl}/ficha-tecnica/conversoes`;
+  private readonly urlGerarPdf = `${environment.apiUrl}/ficha-tecnica/conversoes/gerar-pdf-lista`;
 
   constructor(
     private router: Router,

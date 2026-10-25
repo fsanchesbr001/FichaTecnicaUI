@@ -9,7 +9,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import { NgxMaskDirective, provideNgxMask } from 'ngx-mask';
-import { environment } from '../../../../../../environments/environment';
+import { environment } from '../../../../../environments/environment';
 import { ToastService } from '../../../../services/toast.service';
 import { ApiErrorService } from '../../../../services/api-error.service';
 
@@ -55,8 +55,8 @@ export class FormularioItensProdutoComponent implements OnInit {
   itensEstoque: ItemEstoque[] = [];
   unidades: UnidadeMedidaModal[] = [];
 
-  private readonly urlItens    = `${environment.API}ficha-tecnica/itens`;
-  private readonly urlUnidades = `${environment.API}ficha-tecnica/unidades-medida`;
+  private readonly urlItens    = `${environment.apiUrl}/ficha-tecnica/itens`;
+  private readonly urlUnidades = `${environment.apiUrl}/ficha-tecnica/unidades-medida`;
 
   constructor(
     private fb: FormBuilder,
@@ -126,7 +126,7 @@ export class FormularioItensProdutoComponent implements OnInit {
       }
     ];
 
-    const url = `${environment.API}ficha-tecnica/produtos/${this.data.codigoProduto}/itens`;
+    const url = `${environment.apiUrl}/ficha-tecnica/produtos/${this.data.codigoProduto}/itens`;
     this.http.post(url, payload).subscribe({
       next: () => {
         this.toast.sucesso('Item adicionado ao produto com sucesso.');

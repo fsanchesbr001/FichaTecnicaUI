@@ -7,7 +7,7 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { HttpClient } from '@angular/common/http';
 import { CommonModule } from '@angular/common';
-import { environment } from '../../../../../../environments/environment';
+import { environment } from '../../../../../environments/environment';
 import { DialogoConfirmacaoComponent } from '../../../shared/dialogo-confirmacao/dialogo-confirmacao.component';
 import { ToastService } from '../../../../services/toast.service';
 import { ApiErrorService } from '../../../../services/api-error.service';
@@ -57,7 +57,7 @@ export class ListaItensProdutoComponent implements AfterViewInit, OnChanges {
   dataSource = new MatTableDataSource<ItemProduto>([]);
   unidades: UnidadeMedida[] = [];
 
-  private readonly urlUnidades = `${environment.API}ficha-tecnica/unidades-medida`;
+  private readonly urlUnidades = `${environment.apiUrl}/ficha-tecnica/unidades-medida`;
 
   @ViewChild(MatPaginator) paginator!: MatPaginator;
 
@@ -116,7 +116,7 @@ export class ListaItensProdutoComponent implements AfterViewInit, OnChanges {
   }
 
   carregarItens(): void {
-    const url = `${environment.API}ficha-tecnica/produtos/${this.codigoProduto}/itens`;
+    const url = `${environment.apiUrl}/ficha-tecnica/produtos/${this.codigoProduto}/itens`;
     this.http.get<any>(url).subscribe({
       next: (dados) => {
         const itens = this.normalizarRespostaItens(dados);
@@ -159,7 +159,7 @@ export class ListaItensProdutoComponent implements AfterViewInit, OnChanges {
       return;
     }
 
-    const url = `${environment.API}ficha-tecnica/produtos/${this.codigoProduto}/itens/${idItem}`;
+    const url = `${environment.apiUrl}/ficha-tecnica/produtos/${this.codigoProduto}/itens/${idItem}`;
     this.http.delete(url, { responseType: 'text' }).subscribe({
       next: () => {
         this.toast.sucesso('Item removido do produto com sucesso.');

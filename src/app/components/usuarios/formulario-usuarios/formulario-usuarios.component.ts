@@ -15,7 +15,7 @@ import localePt from '@angular/common/locales/pt';
 import { validateCPF } from '../../../validators/cpf.validator';
 import { Router, Navigation } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
-import { environment } from '../../../../../environments/environment';
+import { environment } from '../../../../environments/environment';
 import { ToastService } from '../../../services/toast.service';
 import { ApiErrorService } from '../../../services/api-error.service';
 import { UsuarioResponse } from '../../../model/usuario.model';
@@ -86,12 +86,12 @@ export class FormularioUsuariosComponent implements OnInit {
     return this.primeiroAcessoVeioDoDb;
   }
 
-  private readonly urlUsuarios         = `${environment.API}ficha-tecnica/usuarios`;
+  private readonly urlUsuarios         = `${environment.apiUrl}/ficha-tecnica/usuarios`;
   private readonly urlRoles            = `${this.urlUsuarios}/roles`;
   private readonly urlRegistrarUsuario = `${this.urlUsuarios}/registrar-usuario`;
   private readonly urlAtualizarUsuario = `${this.urlUsuarios}/atualizar-usuario`;
   private readonly urlPrimeiroAcesso   = `${this.urlUsuarios}/primeiro-acesso`;
-  private readonly urlGerarPdf         = `${environment.API}ficha-tecnica/relatorios/gerar-pdf`;
+  private readonly urlGerarPdf         = `${environment.apiUrl}/ficha-tecnica/relatorios/gerar-pdf`;
 
   constructor(
     private fb: FormBuilder,

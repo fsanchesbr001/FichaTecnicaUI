@@ -5,5 +5,5 @@ services:
     environment:
       BACKEND_API_URL: ${BACKEND_API_URL:-http://159.203.68.36:8080}
     ports:
-      - "80:80"
+      - "${FRONTEND_PORT:-8081}:80"
     restart: unless-stopped

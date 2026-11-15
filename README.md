@@ -23,7 +23,7 @@ usar as funcionalidades que dependem dela.
 | `Dockerfile` | Build com Node 22 Alpine, `npm ci` e build de producao; imagem final com `nginx:alpine` na porta 80. |
 | `.dockerignore` | Exclui dependencias locais, builds, caches e metadados do contexto Docker. |
 | `nginx.conf.template` | Configura fallback SPA e proxy `/api/` para `${BACKEND_API_URL}/`. |
-| `docker-compose.yml` | Usa a imagem do Docker Hub, publica `80:80` e reinicia o container `ficha-tecnica-ui` automaticamente. |
+| `docker-compose.yml` | Usa a imagem do Docker Hub, publica `${FRONTEND_PORT:-8081}:80` e reinicia o container `ficha-tecnica-ui` automaticamente. |
 | `src/environments/environment.ts` e `environment.prod.ts` | Definem `apiUrl: '/api'`, sem hostname publico do backend. |
 | `angular.json` | Usa o environment de producao no build e o proxy local no servidor de desenvolvimento. |
 
@@ -55,9 +55,10 @@ Crie um `.env` ao lado do `docker-compose.yml` (arquivo ignorado pelo Git):
 ```dotenv
 DOCKERHUB_USERNAME=seu-usuario
 BACKEND_API_URL=http://159.203.68.36:8080
+FRONTEND_PORT=8081
 ```
 
-Com Docker Engine e Compose v2 instalados e a porta 80 livre:
+Com Docker Engine e Compose v2 instalados e a porta escolhida livre:
 
 ```powershell
 docker login
@@ -66,7 +67,7 @@ docker compose up -d --force-recreate
 docker compose logs -f frontend
 ```
 
-Acesse `http://localhost`. O Compose nao compila fontes locais. Para
+Acesse `http://localhost:8081` (ou a porta configurada). O Compose nao compila fontes locais. Para
 construir uma imagem localmente, use `docker build -t ficha-tecnica-ui:local .`.
 Se houver um container `ficha-tecnica-ui` criado anteriormente por
 `docker run`, remova-o explicitamente antes da primeira execucao do Compose,
@@ -95,7 +96,9 @@ O proxy evita CORS ao manter a mesma origem para UI e API; nao substitui a
 autenticacao/autorizacao do Spring Security.
 
 Em producao publica, configure HTTPS no proxy de entrada ou balanceador que
-encaminha trafego para a porta 80 deste container.
+encaminha trafego para a porta configurada no host (8081 por padrao). Configure
+o proxy de entrada para encaminhar a essa porta; mudar a porta publicada nao
+configura o proxy nem libera a porta 80 ocupada automaticamente.
 
 ## Code scaffolding
 
@@ -168,6 +171,12 @@ do mesmo commit e cria `.env` com permissao `600` em `/opt/ficha-tecnica-ui`.
 Depois autentica no Docker Hub via stdin, executa `docker compose pull`,
 `docker compose up -d --force-recreate`, verifica o Nginx e a resposta HTTP
 do frontend e remove imagens sem tag com `docker image prune -f`.
+
+O deploy usa a porta 8081 no host por padrao para nao disputar a porta 80.
+Opcionalmente, defina a variavel de Actions `FRONTEND_PORT` no repositorio ou
+no environment `production` para outra porta livre (1 a 65535). Ajuste o
+proxy de entrada e o firewall para a porta escolhida antes de disponibilizar
+o frontend; a verificacao HTTP do deploy usa essa mesma porta.
 
 O servidor precisa de Docker Engine, Compose v2, `base64`, `grep` e `curl`.
 O token nao e gravado no `.env`; o Docker pode armazenar credenciais no

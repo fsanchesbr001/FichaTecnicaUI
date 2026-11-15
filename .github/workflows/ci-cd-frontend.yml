@@ -72,18 +72,23 @@ jobs:
           DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
           DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
           BACKEND_API_URL: ${{ secrets.BACKEND_API_URL }}
+          FRONTEND_PORT: ${{ vars.FRONTEND_PORT || '8081' }}
         with:
           host: ${{ secrets.DROPLET_HOST }}
           username: ${{ secrets.DROPLET_USER }}
           key: ${{ secrets.DROPLET_SSH_KEY }}
           port: ${{ secrets.DROPLET_PORT }}
-          envs: COMPOSE_BASE64,DOCKERHUB_USERNAME,DOCKERHUB_TOKEN,BACKEND_API_URL
+          envs: COMPOSE_BASE64,DOCKERHUB_USERNAME,DOCKERHUB_TOKEN,BACKEND_API_URL,FRONTEND_PORT
           command_timeout: 15m
           script: |
             set -eu
             : "${DOCKERHUB_USERNAME:?Missing DOCKERHUB_USERNAME}"
             : "${DOCKERHUB_TOKEN:?Missing DOCKERHUB_TOKEN}"
             : "${BACKEND_API_URL:?Missing BACKEND_API_URL}"
+            if ! printf '%s\n' "$FRONTEND_PORT" | grep -Eq '^[1-9][0-9]{0,4}$' || [ "$FRONTEND_PORT" -gt 65535 ]; then
+              echo "FRONTEND_PORT must be a port number between 1 and 65535" >&2
+              exit 1
+            fi
             BACKEND_API_URL="${BACKEND_API_URL%/}"
             if ! printf '%s\n' "$BACKEND_API_URL" | grep -Eq '^https?://[a-zA-Z0-9.-]+(:[0-9]+)?$'; then
               echo "BACKEND_API_URL must be an HTTP(S) origin without path or credentials" >&2
@@ -96,8 +101,8 @@ jobs:
             mkdir -p /opt/ficha-tecnica-ui
             cd /opt/ficha-tecnica-ui
             printf '%s' "$COMPOSE_BASE64" | base64 -d > docker-compose.yml
-            printf 'DOCKERHUB_USERNAME=%s\nBACKEND_API_URL=%s\n' \
-              "$DOCKERHUB_USERNAME" "$BACKEND_API_URL" > .env
+            printf 'DOCKERHUB_USERNAME=%s\nBACKEND_API_URL=%s\nFRONTEND_PORT=%s\n' \
+              "$DOCKERHUB_USERNAME" "$BACKEND_API_URL" "$FRONTEND_PORT" > .env
             chmod 600 .env
             docker compose config --quiet
             printf '%s' "$DOCKERHUB_TOKEN" | docker login --username "$DOCKERHUB_USERNAME" --password-stdin
@@ -106,7 +111,7 @@ jobs:
             docker compose up -d --force-recreate
             docker compose exec -T frontend nginx -t
             if ! curl --fail --silent --show-error --retry 10 --retry-connrefused \
-              --retry-delay 3 --max-time 10 http://127.0.0.1/ > /dev/null; then
+              --retry-delay 3 --max-time 10 "http://127.0.0.1:$FRONTEND_PORT/" > /dev/null; then
               docker compose logs --tail 100 frontend
               exit 1
             fi

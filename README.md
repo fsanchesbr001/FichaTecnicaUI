@@ -157,6 +157,15 @@ Angular CLI does not come with an end-to-end testing framework by default. You c
 For more information on using the Angular CLI, including detailed command references, visit the [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli) page.
 
 
+## Deploy (Docker)
+
+O pipeline `.github/workflows/ci-cd-frontend.yml` publica a imagem no Docker Hub e faz o deploy no droplet `104.131.162.136` a cada push na `master`.
+O nginx do container encaminha `/api/*` para `BACKEND_URL` (padrão no pipeline: `http://159.203.68.36:8080`).
+
+Secrets necessários: `DOCKERHUB_USERNAME`, `DOCKERHUB_TOKEN`, `DROPLET_SSH_KEY`.
+
+Execução manual: `docker run -d -p 80:80 -e BACKEND_URL=http://159.203.68.36:8080 <usuario>/ficha-tecnica-ui:latest`
+
 ## Versioning History
 - 1.0.0 - Versão Inicial - Página de ‘Login’.
 - 1.0.1 - Página de Recuperar Senha.

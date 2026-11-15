@@ -1,68 +1,178 @@
 name: Frontend CI/CD
 
+# Secrets obrigatórios (Settings > Secrets and variables > Actions > Secrets):
+#   DOCKERHUB_USERNAME  - usuário do Docker Hub
+#   DOCKERHUB_TOKEN     - Access Token do Docker Hub (Read & Write)
+#   DROPLET_SSH_KEY     - chave privada SSH com acesso ao droplet do frontend
+# Variables opcionais (Settings > Secrets and variables > Actions > Variables):
+#   DROPLET_USER        - usuário SSH do droplet (padrão: root)
+#   FRONTEND_HOST       - IP do droplet do frontend (padrão: 104.131.162.136)
+#   BACKEND_URL         - URL do backend acessada pelo nginx (padrão: http://159.203.68.36:8080)
+
 on:
   push:
-    branches: [ "main", "master" ]
+    branches: [ "master" ]
   pull_request:
-    branches: [ "main", "master" ]
+    branches: [ "master" ]
   workflow_dispatch:
 
 permissions:
   contents: read
-  packages: write
+
+concurrency:
+  group: frontend-deploy-${{ github.ref }}
+  cancel-in-progress: false
 
 env:
-  REGISTRY: ghcr.io
-  IMAGE_NAME: ${{ github.repository }}
+  IMAGE_NAME: ficha-tecnica-ui
+  CONTAINER_NAME: ficha-tecnica-ui
+  FRONTEND_HOST: ${{ vars.FRONTEND_HOST || '104.131.162.136' }}
+  DROPLET_USER: ${{ vars.DROPLET_USER || 'root' }}
+  BACKEND_URL: ${{ vars.BACKEND_URL || 'http://159.203.68.36:8080' }}
 
 jobs:
-  build-test-and-image:
+  # 00 - Valida configurações/secrets antes de qualquer build
+  check-config:
+    name: 00 - Verificar configurações
     runs-on: ubuntu-latest
-
+    if: github.event_name != 'pull_request'
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - name: Validar secrets obrigatórios
+        env:
+          DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+          DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
+          DROPLET_SSH_KEY: ${{ secrets.DROPLET_SSH_KEY }}
+        run: |
+          missing=0
+          for s in DOCKERHUB_USERNAME DOCKERHUB_TOKEN DROPLET_SSH_KEY; do
+            if [ -z "${!s}" ]; then echo "::error::Secret $s não configurado"; missing=1; fi
+          done
+          exit $missing
 
-      - name: Setup Node.js 20
+      - name: Verificar se o droplet do frontend enxerga o backend
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ env.FRONTEND_HOST }}
+          username: ${{ env.DROPLET_USER }}
+          key: ${{ secrets.DROPLET_SSH_KEY }}
+          envs: BACKEND_URL
+          script: |
+            set -e
+            command -v docker >/dev/null || { echo "Docker não instalado no droplet"; exit 1; }
+            code=$(curl -s -o /dev/null -w "%{http_code}" --max-time 10 "$BACKEND_URL/" || true)
+            echo "Backend $BACKEND_URL respondeu HTTP $code"
+            if [ "$code" = "000" ]; then
+              echo "Backend inacessível a partir do droplet do frontend. Verifique o firewall (porta liberada para $(curl -s ifconfig.me))."
+              exit 1
+            fi
+
+  # 01, 02, 03 - Baixar master, compilar, gerar imagem e publicar no Docker Hub
+  build-and-push:
+    name: 01-03 - Build e push da imagem
+    runs-on: ubuntu-latest
+    needs: check-config
+    if: always() && (needs.check-config.result == 'success' || github.event_name == 'pull_request')
+    outputs:
+      image: ${{ steps.vars.outputs.image }}
+    steps:
+      - name: 01 - Baixar a branch master
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event_name == 'pull_request' && github.sha || 'master' }}
+
+      - name: Setup Node.js 22
         uses: actions/setup-node@v4
         with:
-          node-version: "20"
+          node-version: "22"
           cache: npm
 
-      - name: Install dependencies
-        run: npm ci
+      - name: Instalar dependências
+        run: npm ci --no-audit --no-fund
 
-      - name: Build Angular (production)
+      - name: 02 - Compilar (production)
         run: npm run build -- --configuration production
+
+      - name: Definir nome da imagem
+        id: vars
+        run: |
+          user="${{ secrets.DOCKERHUB_USERNAME }}"
+          echo "image=${user:-local}/${IMAGE_NAME}:sha-${GITHUB_SHA::7}" >> "$GITHUB_OUTPUT"
+          echo "latest=${user:-local}/${IMAGE_NAME}:latest" >> "$GITHUB_OUTPUT"
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      - name: Extract Docker metadata
-        id: meta
-        uses: docker/metadata-action@v5
+      - name: Login no Docker Hub
+        if: github.event_name != 'pull_request'
+        uses: docker/login-action@v3
         with:
-          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
-          tags: |
-            type=ref,event=branch
-            type=ref,event=pr
-            type=sha,prefix=sha-
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Build Docker image (cached)
+      - name: 03 - Gerar imagem e subir no Docker Hub
         uses: docker/build-push-action@v6
         with:
           context: .
           file: ./Dockerfile
-          push: false
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
+          platforms: linux/amd64
+          push: ${{ github.event_name != 'pull_request' }}
+          tags: |
+            ${{ steps.vars.outputs.image }}
+            ${{ steps.vars.outputs.latest }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-      - name: Simulate registry push
+  # 04, 05, 06 - Baixar a imagem, copiar para o droplet e iniciar
+  deploy:
+    name: 04-06 - Deploy no droplet
+    runs-on: ubuntu-latest
+    needs: build-and-push
+    if: github.event_name != 'pull_request' && needs.build-and-push.result == 'success'
+    environment: production
+    env:
+      IMAGE: ${{ needs.build-and-push.outputs.image }}
+    steps:
+      - name: Login no Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: 04 - Baixar a imagem gerada
         run: |
-          echo "Image build completed and ready to push."
-          echo "Registry: ${{ env.REGISTRY }}"
-          echo "Image: ${{ env.IMAGE_NAME }}"
-          echo "Tags:"
-          echo "${{ steps.meta.outputs.tags }}"
+          docker pull "$IMAGE"
+          docker save "$IMAGE" | gzip > ficha-tecnica-ui.tar.gz
+          ls -lh ficha-tecnica-ui.tar.gz
+
+      - name: 05 - Copiar a imagem para o droplet
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ env.FRONTEND_HOST }}
+          username: ${{ env.DROPLET_USER }}
+          key: ${{ secrets.DROPLET_SSH_KEY }}
+          source: ficha-tecnica-ui.tar.gz
+          target: /tmp
+
+      - name: 06 - Iniciar o container
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ env.FRONTEND_HOST }}
+          username: ${{ env.DROPLET_USER }}
+          key: ${{ secrets.DROPLET_SSH_KEY }}
+          envs: IMAGE,CONTAINER_NAME,BACKEND_URL
+          script: |
+            set -e
+            gunzip -c /tmp/ficha-tecnica-ui.tar.gz | docker load
+            rm -f /tmp/ficha-tecnica-ui.tar.gz
+            docker rm -f "$CONTAINER_NAME" 2>/dev/null || true
+            docker run -d \
+              --name "$CONTAINER_NAME" \
+              --restart unless-stopped \
+              -p 80:80 \
+              -e BACKEND_URL="$BACKEND_URL" \
+              "$IMAGE"
+            sleep 5
+            docker ps --filter "name=$CONTAINER_NAME"
+            curl -fsS -o /dev/null http://localhost/ && echo "Frontend OK"
+            echo "API via proxy: HTTP $(curl -s -o /dev/null -w '%{http_code}' http://localhost/api/)"
+            docker image prune -f

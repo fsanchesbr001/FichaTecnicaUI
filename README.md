@@ -22,7 +22,7 @@ usar as funcionalidades que dependem dela.
 | --- | --- |
 | `Dockerfile` | Build com Node 22 Alpine, `npm ci` e `npm run build`; imagem final com `nginx:alpine` na porta 80. |
 | `.dockerignore` | Exclui dependencias locais, builds, caches e metadados do contexto Docker. |
-| `nginx.conf` | Serve `dist/ficha-tecnica-ui/browser`, aplica fallback SPA e encaminha `/api/` para o backend. |
+| `nginx.conf` | Template da configuracao Nginx: aplica fallback SPA e encaminha `/api/` para o backend. |
 | `docker-compose.yml` | Publica `80:80` e conecta o frontend a rede externa `ficha_tecnica_network`. |
 | `src/environments/environment.ts` e `environment.prod.ts` | Definem `apiUrl: '/api'`, sem hostname publico do backend. |
 | `angular.json` | Usa o environment de producao no build e o proxy local no servidor de desenvolvimento. |
@@ -32,6 +32,13 @@ a configuracao `production`, com saida estatica em
 `dist/ficha-tecnica-ui/browser`.
 O `ng2-charts` utiliza a linha 8, compativel com Angular/CDK 19, para permitir
 instalacao reproduzivel com `npm ci` sem ignorar dependencias pares.
+
+O Dockerfile copia `nginx.conf` para
+`/etc/nginx/templates/default.conf.template`. Na inicializacao, a imagem
+oficial do Nginx substitui `${BACKEND_URL}` e gera
+`/etc/nginx/conf.d/default.conf`. O valor padrao e `http://backend:8080`,
+resultando em `proxy_pass http://backend:8080/;`. Nao copie este template
+diretamente para `conf.d` sem substituir a variavel.
 
 ### Conectar o backend
 
@@ -70,6 +77,21 @@ A API deve escutar em `0.0.0.0:8080` dentro do container. Nao e necessario
 publicar a porta 8080 no host para a comunicacao com o frontend. Inicie o
 backend antes do frontend, pois o Nginx resolve `backend` ao iniciar.
 Uma API executada apenas no host nao sera encontrada por esse nome.
+
+Para uma API fora da rede Docker, defina a URL acessivel pelo container
+(sem barra final) antes de iniciar o Compose, por exemplo no Docker Desktop:
+
+```powershell
+$env:BACKEND_URL = 'http://host.docker.internal:8080'
+docker compose up -d --build
+```
+
+Essa variavel configura somente o proxy Nginx; a UI continua usando `/api`.
+Para voltar ao backend da rede Docker, remova a substituicao:
+
+```powershell
+Remove-Item Env:BACKEND_URL
+```
 
 ### Construir e iniciar o frontend
 
@@ -212,3 +234,4 @@ Execução manual: `docker run -d -p 80:80 -e BACKEND_URL=http://159.203.68.36:8
 - 1.0.42 - Corrigindo seleção de toogles.
 - 1.0.43 - Correções da carga e exibição de imagens.
 - 1.1.0 - Adicionado container e preparando para produção.
+- 1.1.1 - Configurando para subida em container.

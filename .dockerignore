@@ -4,6 +4,7 @@ dist
 .git
 .github
 .idea
+.env
 coverage
 *.log
 npm-debug.log*

@@ -1,17 +1,9 @@
 services:
   frontend:
-    build:
-      context: .
-      dockerfile: Dockerfile
+    image: ${DOCKERHUB_USERNAME:-fsanchesbr001}/ficha-tecnica-ui:latest
+    container_name: ficha-tecnica-ui
     environment:
-      BACKEND_URL: ${BACKEND_URL:-http://backend:8080}
+      BACKEND_API_URL: ${BACKEND_API_URL:-http://159.203.68.36:8080}
     ports:
       - "80:80"
     restart: unless-stopped
-    networks:
-      - ficha_tecnica_network
-
-networks:
-  ficha_tecnica_network:
-    external: true
-    name: ficha_tecnica_network

@@ -20,10 +20,10 @@ usar as funcionalidades que dependem dela.
 
 | Arquivo | Responsabilidade |
 | --- | --- |
-| `Dockerfile` | Build com Node 22 Alpine, `npm ci` e `npm run build`; imagem final com `nginx:alpine` na porta 80. |
+| `Dockerfile` | Build com Node 22 Alpine, `npm ci` e build de producao; imagem final com `nginx:alpine` na porta 80. |
 | `.dockerignore` | Exclui dependencias locais, builds, caches e metadados do contexto Docker. |
-| `nginx.conf` | Template da configuracao Nginx: aplica fallback SPA e encaminha `/api/` para o backend. |
-| `docker-compose.yml` | Publica `80:80` e conecta o frontend a rede externa `ficha_tecnica_network`. |
+| `nginx.conf.template` | Configura fallback SPA e proxy `/api/` para `${BACKEND_API_URL}/`. |
+| `docker-compose.yml` | Usa a imagem do Docker Hub, publica `80:80` e reinicia o container `ficha-tecnica-ui` automaticamente. |
 | `src/environments/environment.ts` e `environment.prod.ts` | Definem `apiUrl: '/api'`, sem hostname publico do backend. |
 | `angular.json` | Usa o environment de producao no build e o proxy local no servidor de desenvolvimento. |
 
@@ -33,79 +33,44 @@ a configuracao `production`, com saida estatica em
 O `ng2-charts` utiliza a linha 8, compativel com Angular/CDK 19, para permitir
 instalacao reproduzivel com `npm ci` sem ignorar dependencias pares.
 
-O Dockerfile copia `nginx.conf` para
+O Dockerfile copia `nginx.conf.template` para
 `/etc/nginx/templates/default.conf.template`. Na inicializacao, a imagem
-oficial do Nginx substitui `${BACKEND_URL}` e gera
-`/etc/nginx/conf.d/default.conf`. O valor padrao e `http://backend:8080`,
-resultando em `proxy_pass http://backend:8080/;`. Nao copie este template
-diretamente para `conf.d` sem substituir a variavel.
+oficial do Nginx executa `envsubst` para substituir somente
+`${BACKEND_API_URL}` e gera `/etc/nginx/conf.d/default.conf`, preservando
+variaveis Nginx como `$uri` e `$host`. O valor padrao e
+`http://159.203.68.36:8080`. Nao copie o template diretamente para `conf.d`.
 
 ### Conectar o backend
 
-O Compose deste repositorio nao cria um backend ficticio: utiliza uma rede
-externa para conectar a API existente. Crie a rede uma unica vez:
+O backend Spring Boot e remoto; nenhuma rede Docker externa e necessaria.
+A API deve escutar em `0.0.0.0:8080`, e o firewall deve permitir acesso a
+porta 8080 a partir do Droplet do frontend. Defina `BACKEND_API_URL` como
+a origem HTTP(S) da API, sem caminho, credenciais ou barra final.
+Essa variavel configura somente o proxy; a UI continua usando `/api`.
 
-```powershell
-docker network create ficha_tecnica_network
+### Iniciar o frontend com a imagem publicada
+
+Crie um `.env` ao lado do `docker-compose.yml` (arquivo ignorado pelo Git):
+
+```dotenv
+DOCKERHUB_USERNAME=seu-usuario
+BACKEND_API_URL=http://159.203.68.36:8080
 ```
 
-No Compose da API Spring Boot, conecte o servico a mesma rede e atribua o
-alias `backend`:
-
-```yaml
-services:
-  backend:
-    # Mantenha aqui a imagem/build e as configuracoes existentes da API.
-    networks:
-      ficha_tecnica_network:
-        aliases:
-          - backend
-
-networks:
-  ficha_tecnica_network:
-    external: true
-    name: ficha_tecnica_network
-```
-
-Se a API ja estiver em um container sem Compose, conecte esse container:
+Com Docker Engine e Compose v2 instalados e a porta 80 livre:
 
 ```powershell
-docker network connect --alias backend ficha_tecnica_network <container-da-api>
-```
-
-A API deve escutar em `0.0.0.0:8080` dentro do container. Nao e necessario
-publicar a porta 8080 no host para a comunicacao com o frontend. Inicie o
-backend antes do frontend, pois o Nginx resolve `backend` ao iniciar.
-Uma API executada apenas no host nao sera encontrada por esse nome.
-
-Para uma API fora da rede Docker, defina a URL acessivel pelo container
-(sem barra final) antes de iniciar o Compose, por exemplo no Docker Desktop:
-
-```powershell
-$env:BACKEND_URL = 'http://host.docker.internal:8080'
-docker compose up -d --build
-```
-
-Essa variavel configura somente o proxy Nginx; a UI continua usando `/api`.
-Para voltar ao backend da rede Docker, remova a substituicao:
-
-```powershell
-Remove-Item Env:BACKEND_URL
-```
-
-### Construir e iniciar o frontend
-
-Com o Docker Engine ativo, a porta 80 livre e a API conectada a rede:
-
-```powershell
-docker compose up -d --build
-```
-
-Acesse `http://localhost`. Para acompanhar falhas de comunicacao com a API:
-
-```powershell
+docker login
+docker compose pull
+docker compose up -d --force-recreate
 docker compose logs -f frontend
 ```
+
+Acesse `http://localhost`. O Compose nao compila fontes locais. Para
+construir uma imagem localmente, use `docker build -t ficha-tecnica-ui:local .`.
+Se houver um container `ficha-tecnica-ui` criado anteriormente por
+`docker run`, remova-o explicitamente antes da primeira execucao do Compose,
+apos confirmar que ele e a instancia antiga que sera substituida.
 
 ### Rotas e autenticacao
 
@@ -113,11 +78,11 @@ O navegador utiliza apenas a origem do frontend:
 
 | Requisicao do navegador | Destino interno |
 | --- | --- |
-| `/api/auth/login` | `http://backend:8080/auth/login` |
-| `/api/ficha-tecnica/usuarios` | `http://backend:8080/ficha-tecnica/usuarios` |
-| `/api/api/imagens/arquivo.png` | `http://backend:8080/api/imagens/arquivo.png` |
+| `/api/auth/login` | `http://159.203.68.36:8080/auth/login` |
+| `/api/ficha-tecnica/usuarios` | `http://159.203.68.36:8080/ficha-tecnica/usuarios` |
+| `/api/api/imagens/arquivo.png` | `http://159.203.68.36:8080/api/imagens/arquivo.png` |
 
-A barra final em `proxy_pass http://backend:8080/` remove somente o primeiro
+A barra final em `proxy_pass ${BACKEND_API_URL}/;` remove somente o primeiro
 prefixo `/api/`. O segundo `/api` na rota de imagens pertence ao endpoint
 existente do backend. A regra `location ^~ /api/` impede que imagens e PDFs
 da API sejam capturados pela regra de arquivos estaticos.
@@ -179,14 +144,35 @@ Angular CLI does not come with an end-to-end testing framework by default. You c
 For more information on using the Angular CLI, including detailed command references, visit the [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli) page.
 
 
-## Deploy (Docker)
+## CI/CD (GitHub Actions)
 
-O pipeline `.github/workflows/ci-cd-frontend.yml` publica a imagem no Docker Hub e faz o deploy no droplet `104.131.162.136` a cada push na `master`.
-O nginx do container encaminha `/api/*` para `BACKEND_URL` (padrão no pipeline: `http://159.203.68.36:8080`).
+O workflow `.github/workflows/ci-cd-frontend.yml` executa em push na `main`
+ou manualmente via `workflow_dispatch`. Configure os secrets do repositorio
+ou do environment `production` (secrets usados no build precisam estar no
+repositorio):
 
-Secrets necessários: `DOCKERHUB_USERNAME`, `DOCKERHUB_TOKEN`, `DROPLET_SSH_KEY`.
+| Secret | Valor |
+| --- | --- |
+| `DOCKERHUB_USERNAME` | Usuario do Docker Hub. |
+| `DOCKERHUB_TOKEN` | Token com permissao de leitura e escrita no repositorio da imagem. |
+| `DROPLET_HOST` | `104.131.162.136` ou hostname do Droplet. |
+| `DROPLET_USER` | Usuario SSH com permissao para Docker e escrita em `/opt/ficha-tecnica-ui`. |
+| `DROPLET_SSH_KEY` | Chave privada SSH desse usuario. |
+| `DROPLET_PORT` | Porta SSH, normalmente `22`. |
+| `BACKEND_API_URL` | `http://159.203.68.36:8080` (obrigatorio no workflow). |
 
-Execução manual: `docker run -d -p 80:80 -e BACKEND_URL=http://159.203.68.36:8080 <usuario>/ficha-tecnica-ui:latest`
+O job `build-and-push` instala com `npm ci`, compila a UI e publica
+`<usuario>/ficha-tecnica-ui:latest` e `<usuario>/ficha-tecnica-ui:<SHA completo>`.
+O job `deploy` aguarda o build, conecta via SSH, atualiza o Compose a partir
+do mesmo commit e cria `.env` com permissao `600` em `/opt/ficha-tecnica-ui`.
+Depois autentica no Docker Hub via stdin, executa `docker compose pull`,
+`docker compose up -d --force-recreate`, verifica o Nginx e a resposta HTTP
+do frontend e remove imagens sem tag com `docker image prune -f`.
+
+O servidor precisa de Docker Engine, Compose v2, `base64`, `grep` e `curl`.
+O token nao e gravado no `.env`; o Docker pode armazenar credenciais no
+perfil do usuario SSH, conforme seu credential helper. Nenhum secret e
+interpolado diretamente no script remoto.
 
 ## Versioning History
 - 1.0.0 - Versão Inicial - Página de ‘Login’.
@@ -235,3 +221,4 @@ Execução manual: `docker run -d -p 80:80 -e BACKEND_URL=http://159.203.68.36:8
 - 1.0.43 - Correções da carga e exibição de imagens.
 - 1.1.0 - Adicionado container e preparando para produção.
 - 1.1.1 - Configurando para subida em container.
+- 1.1.2 - Secrets do GitHub Actions.

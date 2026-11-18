@@ -2,7 +2,7 @@ name: Frontend CI/CD
 
 on:
   push:
-    branches: [main]
+    branches: [main, master]
   workflow_dispatch:
 
 permissions:
@@ -112,6 +112,13 @@ jobs:
             docker compose exec -T frontend nginx -t
             if ! curl --fail --silent --show-error --retry 10 --retry-connrefused \
               --retry-delay 3 --max-time 10 "http://127.0.0.1:$FRONTEND_PORT/" > /dev/null; then
+              docker compose logs --tail 100 frontend
+              exit 1
+            fi
+            if ! curl --fail --silent --show-error --retry 5 --retry-connrefused \
+              --retry-delay 3 --max-time 15 "http://127.0.0.1:$FRONTEND_PORT/api/actuator/health" \
+              | grep -Eq '"status"[[:space:]]*:[[:space:]]*"UP"'; then
+              echo "Frontend is reachable, but the backend proxy is not healthy" >&2
               docker compose logs --tail 100 frontend
               exit 1
             fi

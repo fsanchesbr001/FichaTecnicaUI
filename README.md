@@ -38,15 +38,22 @@ O Dockerfile copia `nginx.conf.template` para
 oficial do Nginx executa `envsubst` para substituir somente
 `${BACKEND_API_URL}` e gera `/etc/nginx/conf.d/default.conf`, preservando
 variaveis Nginx como `$uri` e `$host`. O valor padrao e
-`http://159.203.68.36:8080`. Nao copie o template diretamente para `conf.d`.
+`https://ollivander.backend.fabriciosanches.com`. Nao copie o template diretamente para `conf.d`.
 
 ### Conectar o backend
 
 O backend Spring Boot e remoto; nenhuma rede Docker externa e necessaria.
-A API deve escutar em `0.0.0.0:8080`, e o firewall deve permitir acesso a
-porta 8080 a partir do Droplet do frontend. Defina `BACKEND_API_URL` como
+A API permanece publicada somente em `127.0.0.1:8080` no Droplet do backend.
+O Nginx desse Droplet termina o HTTPS do dominio
+`ollivander.backend.fabriciosanches.com` e encaminha para essa porta local.
+Nao exponha a porta 8080 na Internet. Defina `BACKEND_API_URL` como
 a origem HTTP(S) da API, sem caminho, credenciais ou barra final.
 Essa variavel configura somente o proxy; a UI continua usando `/api`.
+
+O proxy envia `Host $proxy_host`, e nao o hostname do frontend, para selecionar
+o virtual host correto no backend. SNI e verificacao do certificado TLS estao
+habilitados; o certificado precisa cobrir o dominio da API e ter uma cadeia
+confiavel. Nao desabilite a verificacao para contornar erros de certificado.
 
 ### Iniciar o frontend com a imagem publicada
 
@@ -54,7 +61,7 @@ Crie um `.env` ao lado do `docker-compose.yml` (arquivo ignorado pelo Git):
 
 ```dotenv
 DOCKERHUB_USERNAME=seu-usuario
-BACKEND_API_URL=http://159.203.68.36:8080
+BACKEND_API_URL=https://ollivander.backend.fabriciosanches.com
 FRONTEND_PORT=8081
 ```
 
@@ -79,9 +86,9 @@ O navegador utiliza apenas a origem do frontend:
 
 | Requisicao do navegador | Destino interno |
 | --- | --- |
-| `/api/auth/login` | `http://159.203.68.36:8080/auth/login` |
-| `/api/ficha-tecnica/usuarios` | `http://159.203.68.36:8080/ficha-tecnica/usuarios` |
-| `/api/api/imagens/arquivo.png` | `http://159.203.68.36:8080/api/imagens/arquivo.png` |
+| `/api/auth/login` | `https://ollivander.backend.fabriciosanches.com/auth/login` |
+| `/api/ficha-tecnica/usuarios` | `https://ollivander.backend.fabriciosanches.com/ficha-tecnica/usuarios` |
+| `/api/api/imagens/arquivo.png` | `https://ollivander.backend.fabriciosanches.com/api/imagens/arquivo.png` |
 
 A barra final em `proxy_pass ${BACKEND_API_URL}/;` remove somente o primeiro
 prefixo `/api/`. O segundo `/api` na rota de imagens pertence ao endpoint
@@ -149,7 +156,7 @@ For more information on using the Angular CLI, including detailed command refere
 
 ## CI/CD (GitHub Actions)
 
-O workflow `.github/workflows/ci-cd-frontend.yml` executa em push na `main`
+O workflow `.github/workflows/ci-cd-frontend.yml` executa em push na `master` ou `main`
 ou manualmente via `workflow_dispatch`. Configure os secrets do repositorio
 ou do environment `production` (secrets usados no build precisam estar no
 repositorio):
@@ -162,7 +169,7 @@ repositorio):
 | `DROPLET_USER` | Usuario SSH com permissao para Docker e escrita em `/opt/ficha-tecnica-ui`. |
 | `DROPLET_SSH_KEY` | Chave privada SSH desse usuario. |
 | `DROPLET_PORT` | Porta SSH, normalmente `22`. |
-| `BACKEND_API_URL` | `http://159.203.68.36:8080` (obrigatorio no workflow). |
+| `BACKEND_API_URL` | `https://ollivander.backend.fabriciosanches.com` (obrigatorio no workflow). |
 
 O job `build-and-push` instala com `npm ci`, compila a UI e publica
 `<usuario>/ficha-tecnica-ui:latest` e `<usuario>/ficha-tecnica-ui:<SHA completo>`.
@@ -170,7 +177,30 @@ O job `deploy` aguarda o build, conecta via SSH, atualiza o Compose a partir
 do mesmo commit e cria `.env` com permissao `600` em `/opt/ficha-tecnica-ui`.
 Depois autentica no Docker Hub via stdin, executa `docker compose pull`,
 `docker compose up -d --force-recreate`, verifica o Nginx e a resposta HTTP
-do frontend e remove imagens sem tag com `docker image prune -f`.
+do frontend, exige `status: UP` em `/api/actuator/health` e remove imagens
+sem tag com `docker image prune -f`. Um 200 somente na pagina inicial nao
+comprova conectividade com a API.
+
+### Ordem de implantacao e rollback
+
+Antes do merge, disponibilize o dominio HTTPS da API no Droplet do backend,
+seguindo `deploy/README.shared-proxy.md` do repositorio `ContatosSite`.
+Configure `SITE_ORIGIN_ALLOWED=https://ollivander.fabriciosanches.com` no
+backend, pois o header `Origin` do navegador pode atravessar os proxies.
+Atualize o secret `BACKEND_API_URL` do environment `production` (ou do
+repositorio, se nao houver override no environment) com a nova origem.
+O merge na `master` inicia deploy automaticamente; nao faca o merge antes
+desses requisitos.
+
+Depois, valide `https://ollivander.fabriciosanches.com/api/actuator/health`
+e o login com um usuario de teste. Nenhuma URL absoluta precisa ser
+introduzida no Angular.
+
+Para rollback, use a imagem anterior publicada com tag SHA no Compose do
+Droplet do frontend e recrie somente o servico `frontend`. Preserve o
+dominio HTTPS funcional da API; voltar ao IP publico na porta 8080 nao e
+um rollback funcional quando essa porta esta restrita ao loopback.
+O health-check detecta falhas, mas nao executa rollback automatico.
 
 O deploy usa a porta 8081 no host por padrao para nao disputar a porta 80.
 Opcionalmente, defina a variavel de Actions `FRONTEND_PORT` no repositorio ou

@@ -9,7 +9,9 @@ RUN npm run build -- --configuration production
 
 FROM nginx:alpine AS runtime
 
-ENV BACKEND_API_URL=http://159.203.68.36:8080
+RUN apk add --no-cache ca-certificates
+
+ENV BACKEND_API_URL=https://ollivander.backend.fabriciosanches.com
 ENV NGINX_ENVSUBST_FILTER=^BACKEND_API_URL$
 
 COPY nginx.conf.template /etc/nginx/templates/default.conf.template

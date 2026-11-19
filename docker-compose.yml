@@ -1,6 +1,6 @@
 services:
   frontend:
-    image: ${DOCKERHUB_USERNAME:-fsanchesbr001}/ficha-tecnica-ui:latest
+    image: ${DOCKERHUB_USERNAME:-fsanchesbr001}/ficha-tecnica-ui:${FRONTEND_IMAGE_TAG:-latest}
     container_name: ficha-tecnica-ui
     environment:
       BACKEND_API_URL: ${BACKEND_API_URL:-https://ollivander.backend.fabriciosanches.com}

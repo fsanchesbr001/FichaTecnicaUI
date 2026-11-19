@@ -72,26 +72,28 @@ jobs:
           DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
           DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
           BACKEND_API_URL: ${{ secrets.BACKEND_API_URL }}
+          FRONTEND_IMAGE_TAG: ${{ github.sha }}
           FRONTEND_PORT: ${{ vars.FRONTEND_PORT || '8081' }}
         with:
           host: ${{ secrets.DROPLET_HOST }}
           username: ${{ secrets.DROPLET_USER }}
           key: ${{ secrets.DROPLET_SSH_KEY }}
           port: ${{ secrets.DROPLET_PORT }}
-          envs: COMPOSE_BASE64,DOCKERHUB_USERNAME,DOCKERHUB_TOKEN,BACKEND_API_URL,FRONTEND_PORT
+          envs: COMPOSE_BASE64,DOCKERHUB_USERNAME,DOCKERHUB_TOKEN,BACKEND_API_URL,FRONTEND_IMAGE_TAG,FRONTEND_PORT
           command_timeout: 15m
           script: |
             set -eu
             : "${DOCKERHUB_USERNAME:?Missing DOCKERHUB_USERNAME}"
             : "${DOCKERHUB_TOKEN:?Missing DOCKERHUB_TOKEN}"
             : "${BACKEND_API_URL:?Missing BACKEND_API_URL}"
+            : "${FRONTEND_IMAGE_TAG:?Missing FRONTEND_IMAGE_TAG}"
             if ! printf '%s\n' "$FRONTEND_PORT" | grep -Eq '^[1-9][0-9]{0,4}$' || [ "$FRONTEND_PORT" -gt 65535 ]; then
               echo "FRONTEND_PORT must be a port number between 1 and 65535" >&2
               exit 1
             fi
             BACKEND_API_URL="${BACKEND_API_URL%/}"
-            if ! printf '%s\n' "$BACKEND_API_URL" | grep -Eq '^https?://[a-zA-Z0-9.-]+(:[0-9]+)?$'; then
-              echo "BACKEND_API_URL must be an HTTP(S) origin without path or credentials" >&2
+            if ! printf '%s\n' "$BACKEND_API_URL" | grep -Eq '^https://[a-zA-Z0-9.-]+(:[0-9]+)?$'; then
+              echo "BACKEND_API_URL must be an HTTPS origin without path or credentials" >&2
               exit 1
             fi
             command -v docker >/dev/null
@@ -101,8 +103,8 @@ jobs:
             mkdir -p /opt/ficha-tecnica-ui
             cd /opt/ficha-tecnica-ui
             printf '%s' "$COMPOSE_BASE64" | base64 -d > docker-compose.yml
-            printf 'DOCKERHUB_USERNAME=%s\nBACKEND_API_URL=%s\nFRONTEND_PORT=%s\n' \
-              "$DOCKERHUB_USERNAME" "$BACKEND_API_URL" "$FRONTEND_PORT" > .env
+            printf 'DOCKERHUB_USERNAME=%s\nBACKEND_API_URL=%s\nFRONTEND_PORT=%s\nFRONTEND_IMAGE_TAG=%s\n' \
+              "$DOCKERHUB_USERNAME" "$BACKEND_API_URL" "$FRONTEND_PORT" "$FRONTEND_IMAGE_TAG" > .env
             chmod 600 .env
             docker compose config --quiet
             printf '%s' "$DOCKERHUB_TOKEN" | docker login --username "$DOCKERHUB_USERNAME" --password-stdin
@@ -110,15 +112,21 @@ jobs:
             docker compose pull
             docker compose up -d --force-recreate
             docker compose exec -T frontend nginx -t
-            if ! curl --fail --silent --show-error --retry 10 --retry-connrefused \
-              --retry-delay 3 --max-time 10 "http://127.0.0.1:$FRONTEND_PORT/" > /dev/null; then
+            if ! FRONTEND_STATUS="$(curl --fail --silent --show-error --retry 10 --retry-connrefused \
+              --retry-delay 3 --max-time 10 --output /dev/null --write-out '%{http_code}' \
+              "http://127.0.0.1:$FRONTEND_PORT/")" || [ "$FRONTEND_STATUS" != "200" ]; then
+              echo "Frontend did not return HTTP 200" >&2
               docker compose logs --tail 100 frontend
               exit 1
             fi
-            if ! curl --fail --silent --show-error --retry 5 --retry-connrefused \
-              --retry-delay 3 --max-time 15 "http://127.0.0.1:$FRONTEND_PORT/api/actuator/health" \
-              | grep -Eq '"status"[[:space:]]*:[[:space:]]*"UP"'; then
-              echo "Frontend is reachable, but the backend proxy is not healthy" >&2
+            HEALTH_BODY="$(mktemp)"
+            trap 'rm -f "$HEALTH_BODY"' EXIT
+            if ! BACKEND_STATUS="$(curl --fail --silent --show-error --retry 5 --retry-connrefused \
+              --retry-delay 3 --max-time 15 --output "$HEALTH_BODY" --write-out '%{http_code}' \
+              "http://127.0.0.1:$FRONTEND_PORT/api/actuator/health")" \
+              || [ "$BACKEND_STATUS" != "200" ] \
+              || ! grep -Eq '"status"[[:space:]]*:[[:space:]]*"UP"' "$HEALTH_BODY"; then
+              echo "Backend proxy must return HTTP 200 with status UP" >&2
               docker compose logs --tail 100 frontend
               exit 1
             fi

@@ -99,6 +99,13 @@ jobs:
             command -v docker >/dev/null
             command -v curl >/dev/null
             docker compose version
+            if ! curl --silent --show-error --connect-timeout 10 --max-time 15 \
+              --output /dev/null "$BACKEND_API_URL/actuator/health"; then
+              echo "Backend HTTPS connection failed before changing the deployment: $BACKEND_API_URL" >&2
+              echo "Check DNS, connectivity, and the backend certificate chain and Subject Alternative Names (SAN)." >&2
+              echo "The certificate must cover the hostname in BACKEND_API_URL. Do not disable TLS verification." >&2
+              exit 1
+            fi
             umask 077
             mkdir -p /opt/ficha-tecnica-ui
             cd /opt/ficha-tecnica-ui
